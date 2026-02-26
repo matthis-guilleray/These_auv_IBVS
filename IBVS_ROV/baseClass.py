@@ -33,7 +33,6 @@ class BaseRos2(Node):
         return self
 
     def __exit__(self, exc_type, exc, tb):
-        breakpoint()
         self.exit()
         self.timer_update.cancel()
         # ROS call : 
