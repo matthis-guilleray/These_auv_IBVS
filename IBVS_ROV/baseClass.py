@@ -3,6 +3,7 @@ from datetime import datetime
 from rclpy import get_global_executor
 from rclpy.context import Context
 import rclpy
+import traceback
 
 
 
@@ -68,7 +69,8 @@ class BaseRos2(Node):
         try:
             self.rclpy.spin(self)
         except Exception as e:
-            self.log("error", f"An error happened : {str(e)} ")
+            self.get_logger().error(f"Error: {e}")
+            self.get_logger().error(traceback.format_exc())
             self.__exit__()
         finally:
             self.destroy_node()
