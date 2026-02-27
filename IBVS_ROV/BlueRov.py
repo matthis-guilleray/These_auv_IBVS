@@ -41,8 +41,8 @@ class BlueRov(bc.BaseRos2):
 
 
 
-    def __init__(self, frequency_main, name, ignore_arm = False):
-        super(BlueRov, self).__init__(frequency=frequency_main, name=name)
+    def __init__(self, rclpy, frequency_main, name, ignore_arm = False):
+        super(BlueRov, self).__init__(rclpy=rclpy, frequency=frequency_main, name=name)
         if (ignore_arm == False):
             cmBR.set_disarm(self)
             cmBR.set_stream_rate(self, 25)
@@ -54,8 +54,8 @@ class BlueRov(bc.BaseRos2):
         """
         Super function called on node startup
         """
-        self.log("info", "Starting RosPin")
-        pass
+        self.log("info", "Enter BlueRov")
+        return self
     
     def exit(self):
         """
@@ -71,30 +71,42 @@ class BlueRov(bc.BaseRos2):
         """
         if self.mode_requested["robot_arm"] == True and self.status_arm == False:
             cmBR.set_arm(self)
-        if self.mode_requested["robot_disarm"] == True and self.status_arm == True:
+            self.mode_requested["robot_disarm"] = False
+            self.mode_requested["robot_arm"] = False
+
+        if self.mode_requested["robot_disarm"] == True:
+            self.log("info", "Hello")
             cmBR.set_disarm(self)
+            self.mode_requested["robot_disarm"] = False
+            self.mode_requested["robot_arm"] = False
+
         if self.mode_requested["control_neutral"] == True:
             cmBR.set_override_rcin_neutral(self)
 
 
     def joystick_is_mode_manual(self):
-        return self.buttons["control_manual"]
+        return self.mode_requested["control_manual"]
     
     def joystick_is_automatic(self):
-        return self.buttons["control_autom"]
+        return self.mode_requested["control_autom"]
     
     def _callback_joy(self, data):
-        if data.buttons[BP_ARM] :
+        self.log("info", data.buttons)
+        if data.buttons[BP_ARM] == 1 :
+            self.log("info", "Arming")
             self.mode_requested["robot_arm"] = True
             self.mode_requested["robot_disarm"] = False
-        if data.buttons[BP_DISARM] :
+        if data.buttons[BP_DISARM] == 1:
+            self.log("info", "Disarming")
             self.mode_requested["robot_disarm"] = True
-            self.mode_requested["robot_disarm"] = False
+            self.mode_requested["robot_arm"] = False
 
-        if data.buttons[BP_MANUAL] :
+        if data.buttons[BP_MANUAL] == 1:
+            self.log("info", "Manual")
             self.mode_requested["control_manual"] = True
             self.mode_requested["control_autom"] = False
-        if data.buttons[BP_AUTOM] :
+        if data.buttons[BP_AUTOM] == 1:
+            self.log("info", "Autom")
             self.mode_requested["control_manual"] = False
             self.mode_requested["control_autom"] = True
         
@@ -104,10 +116,10 @@ class BlueRov(bc.BaseRos2):
     def _callback_vel(self, cmd_vel):
         # Extract cmd_vel message
         roll_left_right = uVal.map_value_scale(cmd_vel.angular.x)
-        yaw_left_right = uVal.map_value_scale(-cmd_vel.angular.z)
+        yaw_left_right = uVal.map_value_scale(cmd_vel.angular.z)
         ascend_descend = uVal.map_value_scale(cmd_vel.linear.z)
-        forward_reverse = uVal.map_value_scale(cmd_vel.linear.x)
-        lateral_left_right = uVal.map_value_scale(-cmd_vel.linear.y)
+        forward_reverse = uVal.map_value_scale(-cmd_vel.linear.x)
+        lateral_left_right = uVal.map_value_scale(cmd_vel.linear.y)
         pitch_left_right = uVal.map_value_scale(cmd_vel.angular.y)
 
         if bool(self.joystick_is_mode_manual()):
@@ -126,22 +138,22 @@ class BlueRov(bc.BaseRos2):
             depth=1
         )
 
-        self.subscriber_joystick = self.create_subscription(Joy, "joy", self._callback_joy, qos_profile=qos_profile)
-        self.subscriber_cmdvel = self.create_subscription(Twist, "cmd_vel", self._callback_vel, qos_profile=qos_profile)
-        self.subscriber_imu = self.create_subscription(Imu, "imu/data", self._callback_imu, qos_profile=qos_profile)
+        self.subscriber_joystick = self.create_subscription(Joy, "/bluerov2/joy", self._callback_joy, qos_profile=qos_profile)
+        self.subscriber_cmdvel = self.create_subscription(Twist, "/bluerov2/cmd_vel", self._callback_vel, qos_profile=qos_profile)
+        self.subscriber_imu = self.create_subscription(Imu, "/bluerov2/imu/data", self._callback_imu, qos_profile=qos_profile)
 
 
     def _run_publishers(self):
-        self.publisher_override_rc_in = self.create_publisher(OverrideRCIn, "rc/override", QOS_PROFILE)
-        self.publisher_angle_degrees = self.create_publisher(Twist, 'angle_degree', QOS_PROFILE)
-        self.publisher_depth = self.create_publisher(Float64, 'depth', QOS_PROFILE)
-        self.publisher_angular_velocity = self.create_publisher(Twist, 'angular_velocity', QOS_PROFILE)
-        self.publisher_linear_velocity = self.create_publisher(Twist, 'linear_velocity', QOS_PROFILE)
+        self.publisher_override_rc_in = self.create_publisher(OverrideRCIn, "/bluerov2/rc/override", QOS_PROFILE)
+        self.publisher_angle_degrees = self.create_publisher(Twist, '/bluerov2/angle_degree', QOS_PROFILE)
+        self.publisher_depth = self.create_publisher(Float64, '/bluerov2/depth', QOS_PROFILE)
+        self.publisher_angular_velocity = self.create_publisher(Twist, '/bluerov2/angular_velocity', QOS_PROFILE)
+        self.publisher_linear_velocity = self.create_publisher(Twist, '/bluerov2/linear_velocity', QOS_PROFILE)
 
 
 def main(argv=None):
     rclpy.init(args=argv)
-    blueRov = BlueRov(30, "BlueRov")
+    blueRov = BlueRov(frequency_main=30, name="BlueRov", rclpy=rclpy)
     blueRov.node_run()
     rclpy.shutdown()
 

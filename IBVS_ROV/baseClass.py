@@ -1,19 +1,8 @@
-import rclpy
-import traceback
-import numpy as np
-import math
 from rclpy.node import Node
-import rclpy.timer
-from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
-from struct import pack, unpack
-from std_msgs.msg import Int16, Float64, Empty, Float64MultiArray, String
-from sensor_msgs.msg import Joy, Imu, FluidPressure, LaserScan
-from mavros_msgs.srv import CommandLong, SetMode, StreamRate
-from mavros_msgs.msg import OverrideRCIn, Mavlink
-from mavros_msgs.srv import EndpointAdd
-from geometry_msgs.msg import Twist
 from datetime import datetime
-from rclpy.logging import get_logger
+from rclpy import get_global_executor
+from rclpy.context import Context
+import rclpy
 
 
 
@@ -21,39 +10,47 @@ class BaseRos2(Node):
     dT:float
     name:str
     timer_update:rclpy.timer.Timer
+    rclpy:rclpy
 
-    def __init__(self, name="BaseRos2", frequency=30):
+    def __init__(self, rclpy, name="BaseRos2", frequency=30):
         super().__init__(name)
         self.dT = 1/frequency
         self._log = self.get_logger()
         self.timer_update = self.create_timer(self.dT, self.update)
-        pass
+        self.log("info", "Hello")
+        self.rclpy = rclpy
+        
 
     def __enter__(self):
-        self.enter()
-        return self
+        obj = self.enter()
+        self.log("info", "__enter")
+        return obj
 
-    def __exit__(self, exc_type, exc, tb):
+    def __exit__(self, exc_type=None, exc=None, tb=None):
+        ctxt = Context()
+        ctxt.init()
+
         self.exit()
         self.timer_update.cancel()
         # ROS call : 
         self.destroy_node()
 
     def log(self, log_level, data, once = False, skip_first = False):
+        once = False
+        skip_first = False
         now = datetime.now()
         f = now.strftime("%m-%d - %H:%M:%S.%f")
         text = f"{f} - {str(data)}"
 
         match log_level:
             case "debug":
-                
-                self.get_logger().info(text, once=once, skip_first=skip_first)
+                self.get_logger().debug(text, once=once, skip_first=skip_first)
             case "info":
                 self.get_logger().info(text, once=once, skip_first=skip_first)
             case "warning":
-                self.get_logger().info(text, once=once, skip_first=skip_first)
+                self.get_logger().warning(text, once=once, skip_first=skip_first)
             case "error":
-                self.get_logger().info(text, once=once, skip_first=skip_first)
+                self.get_logger().error(text, once=once, skip_first=skip_first)
             case _: 
                 raise ValueError(f"Log level not found {log_level}")
 
@@ -68,8 +65,24 @@ class BaseRos2(Node):
 
     def node_run(self):
         # rclpy.init(args=args)
-        with self as e:
-            rclpy.spin(e)
+        context = self.rclpy.get_default_context()
+        context.on_shutdown(self.__exit__)
+        
+        
+        self.__enter__()
+
+        self.rclpy.spin(self)
+
+            
+        
+        
+        
+        """try:
+            self.rclpy.spin(e)
+        except Exception as error:
+            self.log("error", f"An error happened {str(error)}")
+        finally:
+            self.__exit__(None, None, None)"""
 
 
 

@@ -22,7 +22,7 @@ rc_in_override_pwm_min = 1100
 
 
 def _blueRov_waitCli(node):
-    cli = node.create_client(CommandLong, 'cmd/command')
+    cli = node.create_client(CommandLong, '/bluerov2/cmd/command')
     result = False
     while not result:
         result = cli.wait_for_service(timeout_sec=4.0)
@@ -85,11 +85,11 @@ def set_stream_rate(node, rate):
 
 
 def set_override_rcin_neutral(node):
-    channel_other = []
-    for i in range(6, 17):
-        channel_other[i-6] = 0
+    channel_other = [1500, 1500]
+    for i in range(8, 17):
+        channel_other.append(0)
     set_override_rcin(node, 
-        1500, 1500, 1500, 1500, 1500, 1500, 1500, channel_other=channel_other
+        1500, 1500, 1500, 1500, 1500, 1500, channel_other=channel_other
     )
 
 
@@ -103,7 +103,8 @@ def set_override_rcin(node,
                     channel_other = [],
                     ):
     
-
+    node.log("info", f"p : {channel_pitch}, r : {channel_roll}, t : {channel_throttle}, y : {channel_yaw}, l : {channel_lateral}")
+    node.log("info", f"Channel other :{str(channel_other)}")
 
     msg_override = OverrideRCIn()
     msg_override.channels[0] = np.uint(uVal.map_value_saturation(channel_pitch, rc_in_override_pwm_min, rc_in_override_pwm_max))  # pulseCmd[4]--> pitch
@@ -121,7 +122,10 @@ def set_override_rcin(node,
 
 
 def set_override_rcin_value(node, index, value):
-    
+    if index == 11 or index == 12 or index == 13:
+        node.log("error", "DO NOT USE THOSE CHANNEL OR YOU WILL TURN CRAZY")
+        node.log("info", "Value has been set to 0")
+        # value = 0
     if index > 17:
         node.log("error", f"Index was too big : {index}")
         return 
@@ -135,6 +139,8 @@ def set_override_rcin_value(node, index, value):
         msg_override.channels[index] = np.uint(uVal.map_value_saturation(value, rc_in_override_pwm_min, rc_in_override_pwm_max))
     else :
         msg_override.channels[index] = value if value <= 1900 else 1900
+
+    node.log("info", f"Channel other :{str(msg_override.channels)}")
     node.publisher_override_rc_in.publish(msg_override)
             
     
