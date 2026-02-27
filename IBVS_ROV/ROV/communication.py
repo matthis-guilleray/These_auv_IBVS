@@ -21,8 +21,10 @@ rc_in_override_pwm_max = 1900
 rc_in_override_pwm_min = 1100
 
 
-def _blueRov_waitCli(node):
-    cli = node.create_client(CommandLong, '/bluerov2/cmd/command')
+def blueRov_create_client(node, message_type = CommandLong, topic='/bluerov2/cmd/command'):
+    node.log("info", f"Creating client : {topic}")
+    node.log("info", f"Message : {message_type}")
+    cli = node.create_client(message_type, topic)
     result = False
     while not result:
         result = cli.wait_for_service(timeout_sec=4.0)
@@ -31,9 +33,9 @@ def _blueRov_waitCli(node):
     return cli
 
 
-def set_arm(node):
-    node.log("info", "Arming the bluerov")
-    cli = _blueRov_waitCli(node)
+
+def _message_create_arm(node):
+    node.log("info", "creating arming msg the bluerov")
     req = CommandLong.Request()
     req.broadcast = False
     req.command = 400
@@ -45,14 +47,10 @@ def set_arm(node):
     req.param5 = 0.0
     req.param6 = 0.0
     req.param7 = 0.0
-    resp = cli.call_async(req)
-    node.status_arm = True
-    node.log("info", "Done arming")
+    return req
 
-
-def set_disarm(node):
-    node.log("info", "Disarming the bluerov")
-    cli = _blueRov_waitCli(node)
+def _message_create_disarm(node):
+    node.log("info", "creating disarming msg the bluerov")
     req = CommandLong.Request()
     req.broadcast = False
     req.command = 400
@@ -64,7 +62,20 @@ def set_disarm(node):
     req.param5 = 0.0
     req.param6 = 0.0
     req.param7 = 0.0
-    resp = cli.call_async(req)
+    return req
+
+
+def set_arm(node, client):
+    node.log("info", "Arming the bluerov")
+    req = _message_create_arm(node)
+    _call_service(node, client=client, message=req, wait_for=False)
+    node.log("info", "Done Arming")
+    node.status_arm = False
+
+def set_disarm(node, client):
+    node.log("info", "Disarming the bluerov")
+    req = _message_create_disarm(node)
+    _call_service(node, client, req, wait_for=False)
     node.log("info", "Done disarming")
     node.status_arm = False
     
@@ -72,16 +83,32 @@ def set_disarm(node):
 
 def set_stream_rate(node, rate):
     node.log('info', f"Setting stream rate : {rate}")
-    cli = _blueRov_waitCli(node)
+    client = blueRov_create_client(node, topic="/bluerov2/set_stream_rate", message_type=StreamRate)
 
     req = StreamRate.Request()
     req.stream_id = 0
     req.message_rate = rate
     req.on_off = True
-    resp = cli.call_async(req)
-    rclpy.spin_until_future_complete(node, resp)
+
+    _call_service(node, client, req)
 
     node.log('info', "Done setting stream rate")
+
+
+
+def _call_service(node, client, message, wait_for=False):
+    node.log("info", client)
+    future = client.call_async(message)
+    rclpy.spin_until_future_complete(node, future, timeout_sec=3)
+
+    if future.result() is not None:
+        response = future.result()
+        node.log("info", f"Response : {response}"
+                
+        )
+    else:
+        node.log("error",'Service call failed')
+
 
 
 def set_override_rcin_neutral(node):

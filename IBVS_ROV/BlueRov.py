@@ -43,12 +43,13 @@ class BlueRov(bc.BaseRos2):
 
     def __init__(self, rclpy, frequency_main, name, ignore_arm = False):
         super(BlueRov, self).__init__(rclpy=rclpy, frequency=frequency_main, name=name)
+        self.client_arming = cmBR.blueRov_create_client(self)
         if (ignore_arm == False):
-            cmBR.set_disarm(self)
+            cmBR.set_disarm(self, self.client_arming)
             cmBR.set_stream_rate(self, 25)
-
         self._run_publishers()
         self._run_subscriber()
+
 
     def enter(self):
         """
@@ -62,6 +63,7 @@ class BlueRov(bc.BaseRos2):
         Super function called on node stop
         """
         self.log("info", "Ending RosPin")
+        cmBR.set_disarm(self, self.client_arming)
         if self.status_arm == True:
             cmBR.set_disarm(self)
 
@@ -70,13 +72,13 @@ class BlueRov(bc.BaseRos2):
         Super function called on a timer of frequency_main
         """
         if self.mode_requested["robot_arm"] == True and self.status_arm == False:
-            cmBR.set_arm(self)
+            cmBR.set_arm(self, self.client_arming)
             self.mode_requested["robot_disarm"] = False
             self.mode_requested["robot_arm"] = False
 
         if self.mode_requested["robot_disarm"] == True:
             self.log("info", "Hello")
-            cmBR.set_disarm(self)
+            cmBR.set_disarm(self, self.client_arming)
             self.mode_requested["robot_disarm"] = False
             self.mode_requested["robot_arm"] = False
 

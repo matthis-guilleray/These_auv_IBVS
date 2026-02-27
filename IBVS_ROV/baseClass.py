@@ -27,11 +27,9 @@ class BaseRos2(Node):
         return obj
 
     def __exit__(self, exc_type=None, exc=None, tb=None):
-        ctxt = Context()
-        ctxt.init()
-
-        self.exit()
         self.timer_update.cancel()
+        self.log("info", "Exit base")
+        self.exit()
         # ROS call : 
         self.destroy_node()
 
@@ -65,13 +63,15 @@ class BaseRos2(Node):
 
     def node_run(self):
         # rclpy.init(args=args)
-        context = self.rclpy.get_default_context()
-        context.on_shutdown(self.__exit__)
-        
-        
         self.__enter__()
-
-        self.rclpy.spin(self)
+        # context.on_shutdown(self.__exit__)
+        try:
+            self.rclpy.spin(self)
+        except :
+            self.__exit__()
+        finally:
+            self.destroy_node()
+        
 
             
         
