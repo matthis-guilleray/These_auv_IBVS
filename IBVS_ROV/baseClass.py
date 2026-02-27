@@ -13,6 +13,7 @@ from mavros_msgs.msg import OverrideRCIn, Mavlink
 from mavros_msgs.srv import EndpointAdd
 from geometry_msgs.msg import Twist
 from datetime import datetime
+from rclpy.logging import get_logger
 
 
 
@@ -40,18 +41,19 @@ class BaseRos2(Node):
 
     def log(self, log_level, data, once = False, skip_first = False):
         now = datetime.now()
-        f = now.strftime("%m-%d_%H-%M-%S.%f")
+        f = now.strftime("%m-%d - %H:%M:%S.%f")
         text = f"{f} - {str(data)}"
 
         match log_level:
             case "debug":
-                self.get_logger().debug(text, once=once, skip_first=skip_first)
+                
+                self.get_logger().info(text, once=once, skip_first=skip_first)
             case "info":
                 self.get_logger().info(text, once=once, skip_first=skip_first)
             case "warning":
-                self.get_logger().warning(text, once=once, skip_first=skip_first)
+                self.get_logger().info(text, once=once, skip_first=skip_first)
             case "error":
-                self.get_logger().error(text, once=once, skip_first=skip_first)
+                self.get_logger().info(text, once=once, skip_first=skip_first)
             case _: 
                 raise ValueError(f"Log level not found {log_level}")
 
@@ -64,13 +66,9 @@ class BaseRos2(Node):
     def enter(self):
         raise NotImplementedError("This function should have been implemented")
 
-    @classmethod
-    def node_run(cls, args=None):
-        print("ROS Init")
+    def node_run(self):
         # rclpy.init(args=args)
-        node = cls()
-        with node as e:
-            print(type(e))
+        with self as e:
             rclpy.spin(e)
 
 

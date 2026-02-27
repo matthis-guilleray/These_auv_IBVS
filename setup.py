@@ -34,6 +34,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'Listener = IBVS_ROV.BlueRov:main',
             'RcInTester = IBVS_ROV.RcInTester:main',
         ],
     },
