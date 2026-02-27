@@ -85,6 +85,9 @@ class BlueRov(bc.BaseRos2):
         if self.mode_requested["control_neutral"] == True:
             cmBR.set_override_rcin_neutral(self)
 
+        if self.joystick_is_automatic() : 
+            raise ValueError("An error happened")
+
 
     def joystick_is_mode_manual(self):
         return self.mode_requested["control_manual"]

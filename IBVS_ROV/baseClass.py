@@ -67,7 +67,8 @@ class BaseRos2(Node):
         # context.on_shutdown(self.__exit__)
         try:
             self.rclpy.spin(self)
-        except :
+        except Exception as e:
+            self.log("error", f"An error happened : {str(e)} ")
             self.__exit__()
         finally:
             self.destroy_node()
