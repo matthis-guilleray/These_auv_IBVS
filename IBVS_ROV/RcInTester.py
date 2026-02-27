@@ -18,9 +18,6 @@ class RcInTester(br.BlueRov):
         data = input(text)
         return int(data)
     
-
-    def update(self):
-
     
     def update(self):
         # if self.joystick_is_automatic():
