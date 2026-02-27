@@ -18,7 +18,7 @@ class BaseRos2(Node):
         self.dT = 1/frequency
         self._log = self.get_logger()
         self.timer_update = self.create_timer(self.dT, self.update)
-        self.log("info", "Hello")
+        self.log("info", "Starting base class")
         self.rclpy = rclpy
         
 
@@ -57,10 +57,10 @@ class BaseRos2(Node):
         raise NotImplementedError("This function should have been implemented")
 
     def exit(self):
-        raise NotImplementedError("This function should have been implemented")
+        pass
 
     def enter(self):
-        raise NotImplementedError("This function should have been implemented")
+        pass
 
     def node_run(self):
         # rclpy.init(args=args)
