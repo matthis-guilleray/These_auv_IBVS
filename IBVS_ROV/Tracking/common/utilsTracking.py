@@ -218,7 +218,9 @@ def estimate_target_depth(points):
         flags=cv2.SOLVEPNP_IPPE
     )
     if retval:
-        return tvecs
+        print(points)
+        print(tvecs[:])
+        return tvecs[2][0]
 
 
 

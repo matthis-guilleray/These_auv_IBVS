@@ -11,7 +11,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseArray, Pose, Point
 from std_msgs.msg import Header
-from . import baseClass as bc
+from . import class_base as bc
 
 # import Tracking.ModuleTracking as mT
 # import Tracking.common.utilsLogger as logMod
@@ -74,7 +74,6 @@ class VideoGrabber(bc.BaseRos2):
         # Create a publisher for the image
         self.publisher_image = self.create_publisher(Image, 'camera/image', 10) 
         #publishes messages of type Image to the topic 'bluerov2/camera/image'.(10): the queue size of the publisher.
-        self.points_selected = None
         self._run()
 
     def _start_gst(self, config=None):

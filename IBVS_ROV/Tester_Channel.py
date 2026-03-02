@@ -1,5 +1,5 @@
-from . import baseClass as bc
-from . import BlueRov as br
+from . import class_base as bc
+from . import class_BlueRov as br
 from .ROV import communication as cmBr
 import time
 import rclpy

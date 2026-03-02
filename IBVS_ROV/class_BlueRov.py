@@ -11,7 +11,7 @@ from mavros_msgs.srv import CommandLong, SetMode, StreamRate
 from mavros_msgs.msg import OverrideRCIn, Mavlink
 from mavros_msgs.srv import EndpointAdd
 from geometry_msgs.msg import Twist
-from . import baseClass as bc
+from . import class_base as bc
 from .ROV import communication as cmBR
 from .ROV import utilsValue as uVal 
 

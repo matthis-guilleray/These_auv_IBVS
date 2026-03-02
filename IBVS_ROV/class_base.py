@@ -33,6 +33,7 @@ class BaseRos2(Node):
         self.exit()
         # ROS call : 
         self.destroy_node()
+        self.rclpy.shutdown()
 
     def log(self, log_level, data, once = False, skip_first = False):
         once = False
@@ -68,12 +69,11 @@ class BaseRos2(Node):
         # context.on_shutdown(self.__exit__)
         try:
             self.rclpy.spin(self)
+            self.__exit__()
         except Exception as e:
             self.get_logger().error(f"Error: {e}")
             self.get_logger().error(traceback.format_exc())
             self.__exit__()
-        finally:
-            self.destroy_node()
         
 
             

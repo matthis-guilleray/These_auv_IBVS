@@ -35,12 +35,15 @@ class VisualTracking:
         self.pts_hand_selected = utilsTracking.manually_select_keypoints(frame)
         self.pts_old_selected = self.pts_hand_selected
         if (len(self.pts_hand_selected) != 5):
-            self.interface.log("Error not enough points selected", "error")
+            self.interface.log("error", "Error not enough points selected")
 
         pts_hand_selected_ibvss = utilsImage.frame_opencv_to_ibvs(self.pts_hand_selected, utilsImage.cam_info_width, utilsImage.cam_info_height)
-        pts_z = utilsTracking.estimate_target_depth(pts_hand_selected_ibvss)
+        pt_z = utilsTracking.estimate_target_depth(pts_hand_selected_ibvss)
+        pts_z = []
         pts_x, pts_y = zip(*self.pts_old_selected)
+        for i in range(len(pts_x)) : pts_z.append(pt_z)
         points = list(zip(pts_x, pts_y, pts_z))
+        print(points)
         self.interface.publish("Tracking/pointsSelected", points, verbose="debug")
 
     

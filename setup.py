@@ -34,8 +34,9 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'Listener = IBVS_ROV.BlueRov:main',
-            'RcInTester = IBVS_ROV.RcInTester:main',
+            'Listener = IBVS_ROV.class_BlueRov:main',
+            'RcInTester = IBVS_ROV.Tester_Channel:main',
+            'SelectPoints = IBVS_ROV.Image_SelectPoints:main'
         ],
     },
 )
