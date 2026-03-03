@@ -37,13 +37,6 @@ class VideoGrabber(bc.BaseRos2):
         super().__init__(name="video", frequency=30, rclpy=rclpy)
         self.log("info", "Starting VideoGrabber")
 
-        self.declare_parameter("port", 5600,) 
-        self.declare_parameter("output_frame", True,) 
-        self.declare_parameter("ros/publish", True,)
-
-        self.declare_parameter("image_width", 1920)
-        self.declare_parameter("image_height", 1080)
-
 
 
 
@@ -71,8 +64,6 @@ class VideoGrabber(bc.BaseRos2):
         # Initialize CvBridge
         self.bridge = CvBridge() # initializes an instance of CvBridge and assigns it to self.bridge. 
 
-        # Create a publisher for the image
-        self.publisher_image = self.create_publisher(Image, 'camera/image', 10) 
         #publishes messages of type Image to the topic 'bluerov2/camera/image'.(10): the queue size of the publisher.
         self._run()
 
@@ -159,6 +150,18 @@ class VideoGrabber(bc.BaseRos2):
         self._frame = new_frame
 
         return Gst.FlowReturn.OK
+
+    def __publishers(self):
+        # Create a publisher for the image
+        self.publisher_image = self.create_publisher(Image, 'camera/image', 10) 
+
+    def __parameters(self):
+        self.declare_parameter("port", 5600,) 
+        self.declare_parameter("output_frame", True,) 
+        self.declare_parameter("ros/publish", True,)
+
+        self.declare_parameter("image_width", 1920)
+        self.declare_parameter("image_height", 1080)
     
     
     def update(self):        

@@ -35,6 +35,15 @@ class BaseRos2(Node):
         self.destroy_node()
         self.rclpy.shutdown()
 
+    def __subscribers(self):
+        pass
+
+    def __publishers(self):
+        pass
+
+    def __parameters(self):
+        pass
+
     def log(self, log_level, data, once = False, skip_first = False):
         once = False
         skip_first = False

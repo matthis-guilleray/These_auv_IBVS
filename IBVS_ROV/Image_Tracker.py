@@ -16,7 +16,7 @@ from . import class_base as bc
 from .Tracking import ModuleTracking as mT
 from .Tracking.common import utilsLogger as logMod
 from .Tracking.common import utilsImage as uImage
-from . import utilsRos as uRos
+from .ROV import utilsRos as uRos
 
 
 class ImageTracker(bc.BaseRos2):
@@ -32,9 +32,6 @@ class ImageTracker(bc.BaseRos2):
     def __init__(self, rclpy=rclpy, name="Image Tracking class", frequency=30):
         super().__init__(rclpy=rclpy, name=name, frequency=frequency)
         self.vt = mT.VisualTracking(self)
-        self.__subscriber()
-        self.__publisher()
-        self.init_parameters()
 
         def nothing(x):
             pass
@@ -49,7 +46,7 @@ class ImageTracker(bc.BaseRos2):
         
 
 
-    def init_parameters(self):
+    def __parameters(self):
         self.declare_parameter("open_window", True)
         self.declare_parameter("trackbar", False)
         self.declare_parameter("debug", True)
@@ -69,7 +66,7 @@ class ImageTracker(bc.BaseRos2):
         
 
 
-    def __publisher(self):
+    def __publishers(self):
         self.publisher_pts_tracked = self.create_publisher(PoseArray, '/camera/points/detected/meter', 10) 
         self.publisher_pts_tracked_center = self.create_publisher(PoseArray, '/camera/points/detected/center', 10) 
         self.publisher_pts_tracked_raw = self.create_publisher(PoseArray, '/camera/points/detected/raw', 10) 
@@ -78,7 +75,7 @@ class ImageTracker(bc.BaseRos2):
         self.publisher_mask_colored = self.create_publisher(Image, "/camera/mask/colored", 10)
 
 
-    def __subscriber(self):
+    def __subscribers(self):
         self.subscriber_image = self.create_subscription(Image, "/camera/image", self.__callback_on_frame, 10)
         self.subscriber_selected_points = self.create_subscription(PoseArray, "/camera/points/selected", self.__callback_on_selected_points, 10)
 

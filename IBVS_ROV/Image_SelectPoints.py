@@ -15,7 +15,7 @@ from . import class_base as bc
 
 from .Tracking import ModuleTracking as mT
 from .Tracking.common import utilsLogger as logMod
-from . import utilsRos as uRos
+from .ROV import utilsRos as uRos
 
 class PointsSelection(bc.BaseRos2):
 
