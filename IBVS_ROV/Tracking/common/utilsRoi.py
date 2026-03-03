@@ -11,12 +11,12 @@ def roi_increase(top_left, bot_right, factor_width, factor_height):
     height_out = height*factor_height
 
     out_top_left = (
-        top_left[0] - int(width_out/2),
-        top_left[1] - int(height_out/2)
+        int(top_left[0] - width_out/2),
+        int(top_left[1] - height_out/2)
     )
     out_bot_right = (
-        bot_right[0] + int(width_out/2),
-        bot_right[1] + int(height_out/2)
+        int(bot_right[0] + width_out/2),
+        int(bot_right[1] + height_out/2)
     )
 
     return out_top_left, out_bot_right

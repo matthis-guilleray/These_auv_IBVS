@@ -15,6 +15,7 @@ from . import class_base as bc
 
 from .Tracking import ModuleTracking as mT
 from .Tracking.common import utilsLogger as logMod
+from . import utilsRos as uRos
 
 class PointsSelection(bc.BaseRos2):
 
@@ -39,7 +40,6 @@ class PointsSelection(bc.BaseRos2):
             # self.__exit__()
 
 
-
     def _callback_on_frame(self, image):
         self.log("info", "Frame received")
         cv_image = self.cv_bridge.imgmsg_to_cv2(image)
@@ -50,32 +50,17 @@ class PointsSelection(bc.BaseRos2):
         self.subscriber_image = self.create_subscription(Image, "/camera/image", self._callback_on_frame, 10)
 
     def __publishers(self):
-        self.publisher_pts_selected = self.create_publisher(PoseArray, '/selected/points', 10) 
+        self.publisher_pts_selected = self.create_publisher(PoseArray, '/camera/points/selected', 10) 
 
     def publish(self, topic, data, verbose):
         if "Tracking/pointsSelected" in topic:
             self.log("info", f"Publishing some points : {data}")
-            msg = self.points_to_pointCloud(data)
+            msg = uRos.points_to_poseArray(data)
             self.publisher_pts_selected.publish(msg)
 
 
 
-    def points_to_pointCloud(self, points):
-        msg = PoseArray()
-        msg.header.frame_id = "map"
-        self.log("info", points)
 
-        for x, y, z in points:
-            print("i")
-            pose = Pose()
-            pose.position.x = float(x)
-            pose.position.y = float(y)
-            pose.position.z = float(z)
-            msg.poses.append(pose)
-
-        self.log("info", msg)
-
-        return msg
     
 def main(argv=None):
     rclpy.init(args=argv)

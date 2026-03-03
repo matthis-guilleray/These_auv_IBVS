@@ -43,6 +43,8 @@ class BaseRos2(Node):
         text = f"{f} - {str(data)}"
 
         match log_level:
+            case "notset":
+                pass
             case "debug":
                 self.get_logger().debug(text, once=once, skip_first=skip_first)
             case "info":

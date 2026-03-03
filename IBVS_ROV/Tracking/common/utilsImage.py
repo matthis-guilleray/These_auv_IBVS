@@ -48,7 +48,8 @@ def draw_keypoints(image, points:list[cv2.KeyPoint]):
 
 def draw_points(image, points:list[list[int,int]], color=(0,0,255)):
     for i in points:
-        cv2.circle(image, i, 2, color, -1)
+        pts = [int(i[0]), int(i[1])]
+        cv2.circle(image, pts, 4, color, -1)
     return image
 
 def draw_triangles(image, points):
@@ -86,11 +87,11 @@ def pixel_to_meters(u, v, z):
 
     x = (u - cx) * z / fx
     y = (v - cy) * z / fy
-    return x, y, z
+    return int(x), int(y), int(z)
 
 def list_points_to_meters(list_points):
     out_list = []
     for point in list_points:
-        out_list.append(pixel_to_meters[point[0], point[1], point[2]])
+        out_list.append(pixel_to_meters(point[0], point[1], point[2]))
 
     return out_list
