@@ -4,7 +4,11 @@ def points_to_poseArray(points):
     msg = PoseArray()
     msg.header.frame_id = "map"
 
-    for x, y, z in points:
+
+    for i in range(len(points)):
+        x, y, z = points[i][0], points[i][1], 0
+        if (len(points[i]) == 3):
+            z = points[i][2]
         print("i")
         pose = Pose()
         pose.position.x = float(x)

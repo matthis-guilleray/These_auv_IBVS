@@ -36,6 +36,7 @@ class VisualTracking:
         self.pts_old_selected = self.pts_hand_selected
         if (len(self.pts_hand_selected) != 5):
             self.interface.log("error", "Error not enough points selected")
+            return
 
         pts_hand_selected_ibvss = utilsImage.frame_opencv_to_ibvs(self.pts_hand_selected, utilsImage.cam_info_width, utilsImage.cam_info_height)
         pt_z = utilsTracking.estimate_target_depth(pts_hand_selected_ibvss)
@@ -49,37 +50,52 @@ class VisualTracking:
     
 
 
-    def _image_base(self, frame):
+    def _image_base(self, frame, fuse_distance=70, roi_factor=1.3, img_threshold=250):
 
         # Detecting keypoints : 
-        pts_new, mask = utilsTracking.generate_keypoints(frame)
-        pts_new_fused = utilsTracking.fuse_close_points(pts_new, 50)
+        pts_new, mask = utilsTracking.generate_keypoints(frame, bot_threshold=img_threshold)
         mask_colored = cv2.cvtColor(mask, cv2.COLOR_GRAY2RGB)
+        mask_colored = utilsImage.draw_points(mask_colored, pts_new, [0,255,0])
 
-        self.interface.publish("Tracking/mask/colored",mask_colored,verbose="notset")
-        self.interface.publish("Tracking/mask",mask,verbose="notset")
+        self.interface.publish("Tracking/mask",mask_colored,verbose="notset")
 
         if self.pts_old_selected is None:
-            return
-            raise ValueError("No points selected")
+            return False
+        if (len(pts_new) < 4):
+            return False
 
         # Generation ROI
-        roi, mask_colored = utilsRoi.roi_generate(mask_colored, self.pts_old_selected, True)
+        roi, mask_colored = utilsRoi.roi_generate(mask_colored, self.pts_old_selected, True, factor=roi_factor)
+        self.interface.publish("Tracking/mask/colored",mask_colored,verbose="notset")
         if (roi != None):
-            pts_new_selected = utilsRoi.roi_select_points(roi, pts_new_fused)
-            board_points = utilsTracking.order_points(pts_new_selected)
+            pts_new_selected = utilsRoi.roi_select_points(roi, pts_new)
+            try:
+                status, board_points = utilsTracking.order_points(pts_new_selected)
+                if (status == False):
+                    self.interface.log("error", f"Points : {board_points}")
+            except ValueError as e: 
+                self.interface.log("error", f"Value error : {str(e)}")
+                return False
             board_points_ibvs = utilsImage.frame_opencv_to_ibvs(board_points, utilsImage.cam_info_width, utilsImage.cam_info_height)
-            depth_points = utilsTracking.estimate_target_depth(board_points_ibvs)
+            
+                
+            pt_z = utilsTracking.estimate_target_depth(board_points_ibvs)
             pts_x, pts_y = zip(*board_points_ibvs)
-            points = zip(pts_x, pts_y, depth_points)
+            pts_z = []
+            for i in range(len(pts_x)) : pts_z.append(pt_z)
+            points = list(zip(pts_x, pts_y, pts_z))
             points_meter = utilsImage.list_points_to_meters(points)
 
             # Drawing on image
-            mask_colored = utilsImage.draw_points(mask_colored, pts_new_selected)
-            mask_colored = utilsImage.draw_points(mask_colored, self.pts_hand_selected, (255,0,0))
+            mask_colored = utilsImage.draw_points(mask_colored, board_points)
+            mask_colored = utilsImage.draw_points(mask_colored, self.pts_old_selected, (255,0,0))
 
-            
+            self.interface.publish("Tracking/mask/colored",mask_colored,verbose="notset")
+            if (len(points_meter) != 5) :
+                return False
+
+            self.pts_old_selected = board_points
             # publishing all data : 
-            self.interface.publish("Tracking/points", points_meter, verbose="debug")  
+            self.interface.publish("Tracking/points/meter", points_meter, verbose="debug")  
             self.interface.publish("Tracking/points/ibvs_frame", board_points_ibvs, verbose="debug")
             self.interface.publish("Tracking/points/camera_frame", board_points, "debug")

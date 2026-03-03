@@ -22,11 +22,13 @@ def roi_increase(top_left, bot_right, factor_width, factor_height):
     return out_top_left, out_bot_right
 
 
-def roi_generate(mask, list_pts, draw=False, factor=1.5):
+def roi_generate(mask, list_pts, draw=False, factor=1.2):
     if (len(list_pts) <= 4):
         raise ValueError(f"Not enough points : {len(list_pts)}")
-    
-    x, y = list(zip(*list_pts))
+    try:
+        x, y, z = list(zip(*list_pts))
+    except :
+        x, y = list(zip(*list_pts)) # TODO faire moins bourrin
 
     top_left = (np.min(x), np.min(y))
     bot_right = (np.max(x), np.max(y))

@@ -38,7 +38,7 @@ class VideoGrabber(bc.BaseRos2):
         self.log("info", "Starting VideoGrabber")
 
         self.declare_parameter("port", 5600,) 
-        self.declare_parameter("output_frame", False,) 
+        self.declare_parameter("output_frame", True,) 
         self.declare_parameter("ros/publish", True,)
 
         self.declare_parameter("image_width", 1920)
