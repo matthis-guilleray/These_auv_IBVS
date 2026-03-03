@@ -35,6 +35,10 @@ class BaseRos2(Node):
         self.destroy_node()
         self.rclpy.shutdown()
 
+    def __getattr__(self, name):
+        # Function which get called when attribute not found
+        return self.get_parameter(name).value
+
     def __subscribers(self):
         pass
 
