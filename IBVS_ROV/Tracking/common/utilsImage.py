@@ -8,8 +8,8 @@ fy = cam_info_k[4] # ly
 cx = cam_info_k[2] # u0
 cy = cam_info_k[5] # v0"""
 
-cam_info_width = 1920
-cam_info_height = 1080
+cam_info_width = 960
+cam_info_height = 540
 cam_info_k = [ 455, 0.0, cam_info_width/2,
                0.0, 455, cam_info_height/2,
                0.0, 0.0, 1.0]
@@ -80,6 +80,7 @@ def frame_opencv_to_ibvs(points, width, height):
     return list(zip(x.astype(np.int32), y.astype(np.int32)))
 
 def pixel_to_meters(u, v, z):
+    z = 1
     fx = cam_info_k[0] # lx
     fy = cam_info_k[4] # ly
     cx = cam_info_k[2] # u0
@@ -87,7 +88,7 @@ def pixel_to_meters(u, v, z):
 
     x = (u - cx) * z / fx
     y = (v - cy) * z / fy
-    return int(x), int(y), int(z)
+    return x, y, z
 
 def list_points_to_meters(list_points):
     out_list = []

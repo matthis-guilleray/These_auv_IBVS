@@ -117,8 +117,11 @@ def order_points(points):
     center_x = (min(xs) + max(xs)) / 2
     center_y = (min(ys) + max(ys)) / 2
     center = closest_point(center_x, center_y)
-
-    status, _ = verify_ratio(top_left, bot_left, center, top_right, top_left)
+    status = False
+    try:
+        status, _ = verify_ratio(top_left, bot_left, center, top_right, top_left)
+    except :
+        pass
 
 
     return status, [top_left, bot_left, center, top_right, bot_right]
