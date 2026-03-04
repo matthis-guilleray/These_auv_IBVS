@@ -41,16 +41,24 @@ class VisualTracking:
         pts_hand_selected_ibvss = utilsImage.frame_opencv_to_ibvs(self.pts_hand_selected, utilsImage.cam_info_width, utilsImage.cam_info_height)
         pt_z = utilsTracking.estimate_target_depth(pts_hand_selected_ibvss)
         pts_z = []
-        pts_x, pts_y = zip(*self.pts_old_selected)
+        pts_x, pts_y = zip(*pts_hand_selected_ibvss)
         for i in range(len(pts_x)) : pts_z.append(pt_z)
         points = list(zip(pts_x, pts_y, pts_z))
-        print(points)
-        self.interface.publish("Tracking/pointsSelected", points, verbose="debug")
+        points_meter = utilsImage.list_points_to_meters(points)
+        self.interface.publish("Tracking/pointsSelected/raw", self.pts_hand_selected, verbose="debug")
+        self.interface.publish("Tracking/pointsSelected/center", points, verbose="debug")
+        self.interface.publish("Tracking/pointsSelected/meter", points_meter, verbose="debug")
 
     
 
 
     def _image_base(self, frame, fuse_distance=70, roi_factor=1.3, img_threshold=250):
+        """
+        Output : Mask colored : 
+        - Green : points non sorted
+        - Red : Points selected
+        - Blue Points kept for error
+        """
 
         # Detecting keypoints : 
         pts_new, mask = utilsTracking.generate_keypoints(frame, bot_threshold=img_threshold)
@@ -66,6 +74,7 @@ class VisualTracking:
 
         # Generation ROI
         roi, mask_colored = utilsRoi.roi_generate(mask_colored, self.pts_old_selected, True, factor=roi_factor)
+        mask_colored = utilsImage.draw_points(mask_colored, self.pts_hand_selected, [255,0,0])
         self.interface.publish("Tracking/mask/colored",mask_colored,verbose="notset")
         if (roi != None):
             pts_new_selected = utilsRoi.roi_select_points(roi, pts_new)
@@ -87,8 +96,9 @@ class VisualTracking:
             points_meter = utilsImage.list_points_to_meters(points)
 
             # Drawing on image
-            mask_colored = utilsImage.draw_points(mask_colored, board_points)
-            mask_colored = utilsImage.draw_points(mask_colored, self.pts_old_selected, (255,0,0))
+            mask_colored = utilsImage.draw_points(mask_colored, board_points, (0, 0, 255))
+            mask_colored = utilsImage.draw_text_points(mask_colored, board_points)
+            # mask_colored = utilsImage.draw_points(mask_colored, self.pts_old_selected, (255,0,0))
 
             self.interface.publish("Tracking/mask/colored",mask_colored,verbose="notset")
             if (len(points_meter) != 5) :
@@ -97,5 +107,5 @@ class VisualTracking:
             self.pts_old_selected = board_points
             # publishing all data : 
             self.interface.publish("Tracking/points/meter", points_meter, verbose="debug")  
-            self.interface.publish("Tracking/points/ibvs_frame", board_points_ibvs, verbose="debug")
-            self.interface.publish("Tracking/points/camera_frame", board_points, "debug")
+            self.interface.publish("Tracking/points/center", board_points_ibvs, verbose="debug")
+            self.interface.publish("Tracking/points/raw", board_points, "debug")

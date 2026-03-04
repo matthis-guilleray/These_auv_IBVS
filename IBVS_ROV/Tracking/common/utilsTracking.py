@@ -108,10 +108,10 @@ def order_points(points):
     def closest_point(target_x, target_y):
         return min(points, key=lambda p: (p[0] - target_x)**2 + (p[1] - target_y)**2)
 
-    top_left = closest_point(min(xs), max(ys))
-    top_right = closest_point(max(xs), max(ys))
-    bot_left = closest_point(min(xs), min(ys))
-    bot_right = closest_point(max(xs), min(ys))
+    top_left = closest_point(min(xs), min(ys))
+    top_right = closest_point(max(xs), min(ys))
+    bot_left = closest_point(min(xs), max(ys))
+    bot_right = closest_point(max(xs), max(ys))
 
     # Center is the closest point to the geometric center
     center_x = (min(xs) + max(xs)) / 2

@@ -52,6 +52,13 @@ def draw_points(image, points:list[list[int,int]], color=(0,0,255)):
         cv2.circle(image, pts, 4, color, -1)
     return image
 
+def draw_text_points(image, points, text = ["tl", "bl", "c", "tr", "br"]):
+    for i in range(len(points)):
+        pts = [int(points[i][0])+10, int(points[i][1])+10]
+        image = cv2.putText(image, text[i], pts, cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+
+    return image
+
 def draw_triangles(image, points):
     image = cv2.line(image, points[0], points[1], (255, 0, 0), 3)
     image = cv2.line(image, points[1], points[2], (255, 0, 0), 3)

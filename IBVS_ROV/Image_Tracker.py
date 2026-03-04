@@ -43,10 +43,8 @@ class ImageTracker(bc.BaseRos2):
                 cv2.createTrackbar('ROI Factor','image',0,255,nothing)
                 cv2.createTrackbar('IMG Threshold','image',0,255,nothing)
         
-        
 
-
-    def __parameters(self):
+    def parameters(self):
         self.declare_parameter("open_window", True)
         self.declare_parameter("trackbar", False)
         self.declare_parameter("debug", True)
@@ -66,8 +64,7 @@ class ImageTracker(bc.BaseRos2):
             self.frame = None
         
 
-
-    def __publishers(self):
+    def publishers(self):
         self.publisher_pts_tracked = self.create_publisher(PoseArray, '/camera/points/detected/meter', 10) 
         self.publisher_pts_tracked_center = self.create_publisher(PoseArray, '/camera/points/detected/center', 10) 
         self.publisher_pts_tracked_raw = self.create_publisher(PoseArray, '/camera/points/detected/raw', 10) 
@@ -76,19 +73,23 @@ class ImageTracker(bc.BaseRos2):
         self.publisher_mask_colored = self.create_publisher(Image, "/camera/mask/colored", 10)
 
 
-    def __subscribers(self):
+    def subscribers(self):
         self.subscriber_image = self.create_subscription(Image, "/camera/image", self.__callback_on_frame, 10)
-        self.subscriber_selected_points = self.create_subscription(PoseArray, "/camera/points/selected", self.__callback_on_selected_points, 10)
+        self.subscriber_selected_points = self.create_subscription(PoseArray, "/camera/points/selected/raw", self.__callback_on_selected_points, 10)
+
 
     def __callback_on_frame(self, data):
         self.log("info", "Frame received")
         cv_image = self.cv_bridge.imgmsg_to_cv2(data)
         self.frame = cv_image        
 
+
     def __callback_on_selected_points(self, data):
         pts = uRos.poseArray_to_points(data)
         self.selected_points = pts
+        self.vt.pts_hand_selected = pts
         self.vt.pts_old_selected = self.selected_points
+
 
     def publish(self, topic, data, verbose):
         self.log(verbose, f"topic : {topic}, data : {data}")
@@ -96,20 +97,16 @@ class ImageTracker(bc.BaseRos2):
         if "points" in topic:
             msg = uRos.points_to_poseArray(data)
         if 'mask' in topic:
-             msg = self.cv_bridge.cv2_to_imgmsg(data, "rgb8")
-        
-
-        
+             msg = self.cv_bridge.cv2_to_imgmsg(data, "rgb8")        
         if topic == "Tracking/points/meter":
             self.log("info", f"Publsihing : {msg}")
             self.publisher_pts_tracked.publish(msg)
-        elif topic == "Tracking/points/ibvs_frame":
+        elif topic == "Tracking/points/center":
             self.log("info", f"Publsihing : {msg}")
             self.publisher_pts_tracked_center.publish(msg)
-        elif topic == "Tracking/points/camera_frame":
+        elif topic == "Tracking/points/raw":
             self.log("info", f"Publsihing : {msg}")
             self.publisher_pts_tracked_raw.publish(msg)
-
         elif topic == "Tracking/mask/colored":
             self.log('info', "on mask")
             self.publisher_mask_colored.publish(msg)
