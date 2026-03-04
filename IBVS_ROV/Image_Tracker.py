@@ -51,6 +51,7 @@ class ImageTracker(bc.BaseRos2):
         self.declare_parameter("trackbar", False)
         self.declare_parameter("debug", True)
 
+
     def update(self):
         if self.frame is not None:
             self.vt._image_base(self.frame.copy(), self.fuse_distance, self.roi_factor, self.img_threshold)

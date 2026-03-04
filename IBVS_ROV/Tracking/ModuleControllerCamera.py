@@ -35,6 +35,7 @@ class ControllerCamera:
 
     def callback_on_points_selected(self, points):
         self.points_selected = points
+        
 
     def _compute_error(self, target_points, actual_points):
         if (len(target_points) != len(actual_points)):

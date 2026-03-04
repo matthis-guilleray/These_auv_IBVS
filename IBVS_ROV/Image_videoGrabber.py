@@ -151,11 +151,11 @@ class VideoGrabber(bc.BaseRos2):
 
         return Gst.FlowReturn.OK
 
-    def __publishers(self):
+    def publishers(self):
         # Create a publisher for the image
         self.publisher_image = self.create_publisher(Image, 'camera/image', 10) 
 
-    def __parameters(self):
+    def parameters(self):
         self.declare_parameter("port", 5600,) 
         self.declare_parameter("output_frame", True,) 
         self.declare_parameter("ros/publish", True,)
