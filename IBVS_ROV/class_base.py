@@ -17,19 +17,25 @@ class BaseRos2(Node):
         super().__init__(name)
         self.dT = 1/frequency
         self._log = self.get_logger()
-        self.timer_update = self.create_timer(self.dT, self.update)
-        self.log("info", "Starting base class")
+        self.log("info", "------ Base Init")
         self.rclpy = rclpy
+        self.parameters()
+        self.subscribers()
+        self.publishers()
+
+        self.timer_update = self.create_timer(self.dT, self.update)
+
         
 
     def __enter__(self):
+        self.log("info", "------ Method : Enter")
         obj = self.enter()
-        self.log("info", "__enter")
+        self.log("info", "------ Starting ROS")
         return obj
 
     def __exit__(self, exc_type=None, exc=None, tb=None):
         self.timer_update.cancel()
-        self.log("info", "Exit base")
+        self.log("info", "------ Method : Exit")
         self.exit()
         # ROS call : 
         self.destroy_node()
@@ -37,15 +43,19 @@ class BaseRos2(Node):
 
     def __getattr__(self, name):
         # Function which get called when attribute not found
-        return self.get_parameter(name).value
+        try:
+            value = self.get_parameter(name).value
+            return value
+        except Exception as e:
+            raise KeyError(f"Element not found : {name} either in object or in parameters {str(e)}")
 
-    def __subscribers(self):
+    def subscribers(self):
         pass
 
-    def __publishers(self):
+    def publishers(self):
         pass
 
-    def __parameters(self):
+    def parameters(self):
         pass
 
     def log(self, log_level, data, once = False, skip_first = False):

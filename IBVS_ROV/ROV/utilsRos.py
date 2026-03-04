@@ -9,7 +9,6 @@ def points_to_poseArray(points):
         x, y, z = points[i][0], points[i][1], 0
         if (len(points[i]) == 3):
             z = points[i][2]
-        print("i")
         pose = Pose()
         pose.position.x = float(x)
         pose.position.y = float(y)
