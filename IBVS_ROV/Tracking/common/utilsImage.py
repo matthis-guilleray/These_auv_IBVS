@@ -10,15 +10,16 @@ cy = cam_info_k[5] # v0"""
 
 cam_info_width = 960
 cam_info_height = 540
-cam_info_k = [ 455, 0.0, cam_info_width/2,
-               0.0, 455, cam_info_height/2,
+fx = 525 # TODO : Tbd as 455
+cam_info_k = [ 525, 0.0, cam_info_width/2,
+               0.0, 525, cam_info_height/2,
                0.0, 0.0, 1.0]
 cam_info_d = [0.0, 0.0, 0.0, 0.0, 0.0]
 cam_info_r = [1.0, 0.0, 0.0,
               0.0, 1.0, 0.0,
               0.0, 0.0, 1.0]
-cam_info_p = [455, 0.0, cam_info_width/2, 0.0,
-            0.0, 455, cam_info_height/2, 0.0,
+cam_info_p = [525, 0.0, cam_info_width/2, 0.0,
+            0.0, 525, cam_info_height/2, 0.0,
             cam_info_k, 0.0, 0.0, 1.0, 0.0]
 
 

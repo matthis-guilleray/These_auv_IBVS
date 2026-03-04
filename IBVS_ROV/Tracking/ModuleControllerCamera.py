@@ -22,7 +22,7 @@ class ControllerCamera:
             return
         if points == None:
             return
-        if (len(self.points_selected) != len(points)):
+        if (len(self.pointpointss_selected) != len(points)):
             return
 
         speedValue = self._controller(points)

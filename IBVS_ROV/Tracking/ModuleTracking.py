@@ -75,7 +75,6 @@ class VisualTracking:
         # Generation ROI
         roi, mask_colored = utilsRoi.roi_generate(mask_colored, self.pts_old_selected, True, factor=roi_factor)
         mask_colored = utilsImage.draw_points(mask_colored, self.pts_hand_selected, [255,0,0])
-        self.interface.publish("Tracking/mask/colored",mask_colored,verbose="notset")
         if (roi != None):
             pts_new_selected = utilsRoi.roi_select_points(roi, pts_new)
             try:
@@ -109,3 +108,5 @@ class VisualTracking:
             self.interface.publish("Tracking/points/meter", points_meter, verbose="debug")  
             self.interface.publish("Tracking/points/center", board_points_ibvs, verbose="debug")
             self.interface.publish("Tracking/points/raw", board_points, "debug")
+        else:
+            self.interface.publish("Tracking/mask/colored",mask_colored,verbose="notset")

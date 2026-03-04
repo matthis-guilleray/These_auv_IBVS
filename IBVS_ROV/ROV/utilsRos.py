@@ -1,4 +1,4 @@
-from geometry_msgs.msg import PoseArray, Pose, Point
+from geometry_msgs.msg import PoseArray, Pose, Point, Vector3, Twist
 
 def points_to_poseArray(points):
     msg = PoseArray()
@@ -21,4 +21,20 @@ def poseArray_to_points(pose_array):
     points = []
     for pose in pose_array.poses:
         points.append((pose.position.x, pose.position.y, pose.position.z))
+    return points
+
+
+def velocity_to_Twists(data):
+    linear = Vector3(x=data[0], y=data[1], z=data[2])
+    angular = Vector3(x=data[3], y=data[4], z=data[5])
+
+    msg = Twist(linear=linear, angular=angular)
+    return msg
+
+def multiFloat32_to_points(pose_array):
+    points = []
+    
+    for i in range(0, len(pose_array.data)-1, 2):
+        
+        points.append([pose_array.data[i], pose_array.data[i+1], 1])
     return points

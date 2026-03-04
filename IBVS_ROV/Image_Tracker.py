@@ -45,7 +45,7 @@ class ImageTracker(bc.BaseRos2):
         
 
     def parameters(self):
-        self.declare_parameter("open_window", True)
+        self.declare_parameter("open_window", False)
         self.declare_parameter("trackbar", False)
         self.declare_parameter("debug", True)
 
@@ -109,12 +109,14 @@ class ImageTracker(bc.BaseRos2):
             self.publisher_pts_tracked_raw.publish(msg)
         elif topic == "Tracking/mask/colored":
             self.log('info', "on mask")
-            self.publisher_mask_colored.publish(msg)
+            if self.debug == True:
+                self.publisher_mask_colored.publish(msg)
             if self.get_parameter("open_window").value:
                 uImage.show_image(data, name="mask colored")
         elif topic == "Tracking/mask":
             self.log('info', "on mask")
-            self.publisher_mask.publish(msg)
+            if self.debug == True:
+                self.publisher_mask.publish(msg)
             if self.get_parameter("open_window").value:
                 uImage.show_image(data, name="mask")
 
