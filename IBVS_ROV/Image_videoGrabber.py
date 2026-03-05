@@ -1,20 +1,11 @@
 #!/usr/bin/env python3
 import rclpy
-from rclpy.node import Node
 import cv2
 import gi
 import numpy as np
-from sensor_msgs.msg import Image, PointCloud2 #new This line imports the ROS 2 message type 
+from sensor_msgs.msg import Image #new This line imports the ROS 2 message type 
 from cv_bridge import CvBridge  #new converting between ROS Image messages and OpenCV images (numpy arrays).
-import rclpy
-import rclpy
-from rclpy.node import Node
-from geometry_msgs.msg import PoseArray, Pose, Point
-from std_msgs.msg import Header
 from . import class_base as bc
-
-# import Tracking.ModuleTracking as mT
-# import Tracking.common.utilsLogger as logMod
 
 
 gi.require_version('Gst', '1.0')
@@ -151,11 +142,12 @@ class VideoGrabber(bc.BaseRos2):
 
         return Gst.FlowReturn.OK
 
-    def publishers(self):
+    def run_publishers(self):
         # Create a publisher for the image
-        self.publisher_image = self.create_publisher(Image, 'camera/image', 10) 
+        self.publisher_image = self.create_publisher(Image, '/IBVS/sensor/camera', 10) 
 
-    def parameters(self):
+    def run_parameters(self):
+        super().run_parameters()
         self.declare_parameter("port", 5600,) 
         self.declare_parameter("output_frame", True,) 
         self.declare_parameter("ros/publish", True,)

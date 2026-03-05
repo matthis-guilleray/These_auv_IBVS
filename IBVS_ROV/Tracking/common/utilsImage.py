@@ -8,8 +8,8 @@ fy = cam_info_k[4] # ly
 cx = cam_info_k[2] # u0
 cy = cam_info_k[5] # v0"""
 
-cam_info_width = 960
-cam_info_height = 540
+cam_info_width = 640
+cam_info_height = 480
 fx = 525 # TODO : Tbd as 455
 cam_info_k = [ 525, 0.0, cam_info_width/2,
                0.0, 525, cam_info_height/2,
@@ -20,7 +20,7 @@ cam_info_r = [1.0, 0.0, 0.0,
               0.0, 0.0, 1.0]
 cam_info_p = [525, 0.0, cam_info_width/2, 0.0,
             0.0, 525, cam_info_height/2, 0.0,
-            cam_info_k, 0.0, 0.0, 1.0, 0.0]
+            0.0, 0.0, 1.0, 0.0]
 
 
 def open_video(filename):
@@ -88,7 +88,6 @@ def frame_opencv_to_ibvs(points, width, height):
     return list(zip(x.astype(np.int32), y.astype(np.int32)))
 
 def pixel_to_meters(u, v, z):
-    z = 1
     fx = cam_info_k[0] # lx
     fy = cam_info_k[4] # ly
     cx = cam_info_k[2] # u0
@@ -96,11 +95,31 @@ def pixel_to_meters(u, v, z):
 
     x = (u - cx) * z / fx
     y = (v - cy) * z / fy
-    return x, y, z
+    return [x, y, z]
+
+
+def handle_z_value(list_points, zValue_isSet, zValue_default):
+    out_list = []
+    for point in list_points:
+
+        if len(point) < 3:
+            # Handling missing Z
+            if zValue_default is not None:
+                point.append(zValue_default)
+            else:
+                raise ValueError("Z missing and no zValue isSet ")
+            
+        if zValue_isSet == True and zValue_default is not None:
+            point[2] = zValue_default
+
+        out_list.append([point[0], point[1], point[2]])
+    return out_list
 
 def list_points_to_meters(list_points):
     out_list = []
     for point in list_points:
+        if len(point) != 3:
+            raise ValueError(f"Point length is different of 3 : {len(point)}")
         out_list.append(pixel_to_meters(point[0], point[1], point[2]))
 
     return out_list

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>	
+	<group> 
+	
+		<include file="$(find-pkg-share IBVS_ROV)/launch/run_mavros.launch">  
+			<arg name="namespace" value="bluerov2"/>		
+		</include>
+		<include file="$(find-pkg-share IBVS_ROV)/launch/run_gamepad.launch">  
+			<arg name="namespace" value="bluerov2"/>	
+		</include>
+		
+	</group>
+
+	<group>
+		<node pkg="IBVS_ROV" exec="Tester_Command_camera" name="tester_command_camera" namespace="$(var namespace)" output="screen"></node>
+		<node pkg="IBVS_ROV" exec="Controller_frame" name="Controller_frame" namespace="$(var namespace)" output="screen"></node>
+	</group>
+		
+</launch>	

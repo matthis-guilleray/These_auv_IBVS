@@ -1,20 +1,11 @@
 #!/usr/bin/env python3
 import rclpy
-from rclpy.node import Node
-import cv2
-import gi
-import numpy as np
-from sensor_msgs.msg import Image, PointCloud2 #new This line imports the ROS 2 message type 
+from sensor_msgs.msg import Image #new This line imports the ROS 2 message type 
 from cv_bridge import CvBridge  #new converting between ROS Image messages and OpenCV images (numpy arrays).
-import rclpy
-import rclpy
-from rclpy.node import Node
-from geometry_msgs.msg import PoseArray, Pose, Point
-from std_msgs.msg import Header
+from geometry_msgs.msg import PoseArray
 from . import class_base as bc
 
 from .Tracking import ModuleTracking as mT
-from .Tracking.common import utilsLogger as logMod
 from .ROV import utilsRos as uRos
 
 class PointsSelection(bc.BaseRos2):
@@ -29,19 +20,29 @@ class PointsSelection(bc.BaseRos2):
         self.tracker = mT.VisualTracking(self)
 
 
+    def run_subscribers(self):
+        self.subscriber_image = self.create_subscription(Image, "/IBVS/sensor/camera", self._callback_on_frame, 10)
+
+
+    def run_publishers(self):
+        self.publisher_pts_selected_raw = self.create_publisher(PoseArray, '/IBVS/image/selected/raw', 10) 
+        self.publisher_pts_selected_center = self.create_publisher(PoseArray, '/IBVS/image/selected/center', 10) 
+        self.publisher_pts_selected_meter = self.create_publisher(PoseArray, '/IBVS/image/selected/meter', 10) 
+
+
+    def update(self):
+        image = self.image
+        if (image is not None):
+            self.log("info", "Selecting points on an image")
+            self.tracker.is_selecting = True
+            self.tracker.on_image(image)
+            
+    
     def _callback_on_frame(self, image):
         self.log("info", "Frame received")
         cv_image = self.cv_bridge.imgmsg_to_cv2(image)
         self.image = cv_image
-
-
-    def subscribers(self):
-        self.subscriber_image = self.create_subscription(Image, "/camera/image", self._callback_on_frame, 10)
-
-    def publishers(self):
-        self.publisher_pts_selected_raw = self.create_publisher(PoseArray, '/camera/points/selected/raw', 10) 
-        self.publisher_pts_selected_center = self.create_publisher(PoseArray, '/camera/points/selected/center', 10) 
-        self.publisher_pts_selected_meter = self.create_publisher(PoseArray, '/camera/points/selected/meter', 10) 
+            
 
     def publish(self, topic, data, verbose):
         msg = uRos.points_to_poseArray(data)
@@ -54,20 +55,6 @@ class PointsSelection(bc.BaseRos2):
             self.publisher_pts_selected_center.publish(msg)
         if "Tracking/pointsSelected/meter" in topic:
             self.publisher_pts_selected_meter.publish(msg)
-
-
-
-
-    def update(self):
-        image = self.image
-        if (image is not None):
-            self.log("info", "Selecting points on an image")
-            self.tracker.is_selecting = True
-            self.tracker.on_image(image)
-            
-            # self.__exit__()
-
-
 
 
     

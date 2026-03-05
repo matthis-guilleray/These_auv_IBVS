@@ -58,7 +58,7 @@ class ControllerCamera:
         if (self.points_selected == None):
             raise ValueError("No points selected")
 
-        matrix_L_x = uCont.construct_interaction_matrix(points)
+        matrix_L_x = uCont.construct_matrix_stacked_L_x(points)
         matrix_L_x_pinv = np.linalg.pinv(matrix_L_x)
         error = self._compute_error(self.points_selected, points)
         control = -self.value_lambda * matrix_L_x_pinv @ error

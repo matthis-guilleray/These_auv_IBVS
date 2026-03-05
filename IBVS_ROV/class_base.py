@@ -1,9 +1,9 @@
+import rclpy
+import rclpy.timer
 from rclpy.node import Node
 from datetime import datetime
-from rclpy import get_global_executor
-from rclpy.context import Context
-import rclpy
 import traceback
+import rclpy.logging
 
 
 
@@ -17,12 +17,11 @@ class BaseRos2(Node):
         super().__init__(name)
         self.dT = 1/frequency
         self._log = self.get_logger()
-        self.log("info", "------ Base Init")
         self.rclpy = rclpy
-        self.parameters()
-        self.subscribers()
-        self.publishers()
-
+        self.run_parameters()
+        self.run_subscribers()
+        self.run_publishers()
+        
         self.timer_update = self.create_timer(self.dT, self.update)
 
         
@@ -49,14 +48,15 @@ class BaseRos2(Node):
         except Exception as e:
             raise KeyError(f"Element not found : {name} either in object or in parameters {str(e)}")
 
-    def subscribers(self):
+    def run_subscribers(self):
         pass
 
-    def publishers(self):
+    def run_publishers(self):
         pass
 
-    def parameters(self):
-        pass
+    def run_parameters(self):
+        self.declare_parameter('param_debug', True)
+        self.declare_parameter("param_log_min_level", rclpy.logging.LoggingSeverity.DEBUG)
 
     def log(self, log_level, data, once = False, skip_first = False):
         once = False
@@ -64,6 +64,7 @@ class BaseRos2(Node):
         now = datetime.now()
         f = now.strftime("%m-%d - %H:%M:%S.%f")
         text = f"{f} - {str(data)}"
+        self.get_logger().set_level(self.param_log_min_level)
 
         match log_level:
             case "notset":
@@ -80,7 +81,7 @@ class BaseRos2(Node):
                 raise ValueError(f"Log level not found {log_level}")
 
     def update(self):
-        raise NotImplementedError("This function should have been implemented")
+        pass
 
     def exit(self):
         pass

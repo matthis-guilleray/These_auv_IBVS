@@ -1,7 +1,5 @@
-from . import class_base as bc
 from . import class_BlueRov as br
 from .ROV import communication as cmBr
-import time
 import rclpy
 
 class RcInTester(br.BlueRov):
@@ -23,7 +21,6 @@ class RcInTester(br.BlueRov):
     def enter(self):
         # cmBr.set_override_rcin_neutral(self)
         super().enter()
-        self.log("info", "Enter RcIn")
         return self
     
     

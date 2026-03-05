@@ -52,7 +52,7 @@ class VisualTracking:
     
 
 
-    def _image_base(self, frame, fuse_distance=70, roi_factor=1.3, img_threshold=250):
+    def _image_base(self, frame, roi_factor=1.3, img_threshold=250):
         """
         Output : Mask colored : 
         - Green : points non sorted

@@ -1,27 +1,14 @@
 import rclpy
-import traceback
 import numpy as np
-import math
-from rclpy.node import Node
-from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
-from struct import pack, unpack
-from std_msgs.msg import Int16, Float64, Empty, Float64MultiArray, String
-from sensor_msgs.msg import Joy, Imu, FluidPressure, LaserScan
-from mavros_msgs.srv import CommandLong, SetMode, StreamRate
-from mavros_msgs.msg import OverrideRCIn, Mavlink
-from mavros_msgs.srv import EndpointAdd
-from geometry_msgs.msg import Twist
-
+from mavros_msgs.srv import CommandLong, StreamRate
+from mavros_msgs.msg import OverrideRCIn
 from . import utilsValue as uVal
-
-
-
 
 rc_in_override_pwm_max = 1900
 rc_in_override_pwm_min = 1100
 
 
-def blueRov_create_client(node, message_type = CommandLong, topic='/bluerov2/cmd/command'):
+def blueRov_create_client(node, message_type = CommandLong, topic='/cmd/command'):
     node.log("info", f"Creating client : {topic}")
     node.log("info", f"Message : {message_type}")
     cli = node.create_client(message_type, topic)
@@ -69,21 +56,18 @@ def set_arm(node, client):
     node.log("info", "Arming the bluerov")
     req = _message_create_arm(node)
     _call_service(node, client=client, message=req, wait_for=False)
-    node.log("info", "Done Arming")
-    node.status_arm = False
+    node.status_arm_logic = None
 
 def set_disarm(node, client):
     node.log("info", "Disarming the bluerov")
     req = _message_create_disarm(node)
     _call_service(node, client, req, wait_for=False)
-    node.log("info", "Done disarming")
-    node.status_arm = False
-    
+    node.status_arm_logic = None
 
 
 def set_stream_rate(node, rate):
     node.log('info', f"Setting stream rate : {rate}")
-    client = blueRov_create_client(node, topic="/bluerov2/set_stream_rate", message_type=StreamRate)
+    client = blueRov_create_client(node, topic="/set_stream_rate", message_type=StreamRate)
 
     req = StreamRate.Request()
     req.stream_id = 0

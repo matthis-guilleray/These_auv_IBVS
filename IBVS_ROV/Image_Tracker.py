@@ -1,20 +1,12 @@
 #!/usr/bin/env python3
-import rclpy
-from rclpy.node import Node
 import cv2
-import gi
-import numpy as np
-from sensor_msgs.msg import Image, PointCloud2 #new This line imports the ROS 2 message type 
+from sensor_msgs.msg import Image #new This line imports the ROS 2 message type 
 from cv_bridge import CvBridge  #new converting between ROS Image messages and OpenCV images (numpy arrays).
 import rclpy
-import rclpy
-from rclpy.node import Node
-from geometry_msgs.msg import PoseArray, Pose, Point
-from std_msgs.msg import Header
+from geometry_msgs.msg import PoseArray
 from . import class_base as bc
 
 from .Tracking import ModuleTracking as mT
-from .Tracking.common import utilsLogger as logMod
 from .Tracking.common import utilsImage as uImage
 from .ROV import utilsRos as uRos
 
@@ -25,57 +17,44 @@ class ImageTracker(bc.BaseRos2):
     frame = None
     cv_bridge = CvBridge()
     vt:mT.VisualTracking
-    fuse_distance = 30
-    roi_factor = 2
-    img_threshold = 254
 
     def __init__(self, rclpy=rclpy, name="Image Tracking class", frequency=30):
         super().__init__(rclpy=rclpy, name=name, frequency=frequency)
         self.vt = mT.VisualTracking(self)
-
-        def nothing(x):
-            pass
-
-        if (self.get_parameter("open_window").value):
-            cv2.namedWindow('image')
-            if (self.get_parameter("trackbar").value):
-                cv2.createTrackbar('Fuse disance','image',0,255,nothing)
-                cv2.createTrackbar('ROI Factor','image',0,255,nothing)
-                cv2.createTrackbar('IMG Threshold','image',0,255,nothing)
         
 
-    def parameters(self):
-        self.declare_parameter("open_window", False)
-        self.declare_parameter("trackbar", False)
-        self.declare_parameter("debug", True)
+    def run_parameters(self):
+        super().run_parameters()
+        self.declare_parameter("param_show_image", False)
+        self.declare_parameter("param_show_mask", False)
+
+        self.declare_parameter("param_roi_factor", 2)
+        self.declare_parameter("param_img_threshold", 254)
+
+
+    
+    def run_publishers(self):
+        super().run_publishers()
+        self.publisher_pts_tracked = self.create_publisher(PoseArray, '/IBVS/image/detected/meter', 10) 
+        self.publisher_pts_tracked_center = self.create_publisher(PoseArray, '/IBVS/image/detected/center', 10) 
+        self.publisher_pts_tracked_raw = self.create_publisher(PoseArray, '/IBVS/image/detected/raw', 10) 
+        self.publisher_mask = self.create_publisher(Image, "/IBVS/image/debug/mask", 10)
+        self.publisher_mask_colored = self.create_publisher(Image, "/IBVS/image/debug/mask/colored", 10)
+
+
+    def run_subscribers(self):
+        super().run_subscribers()
+        self.subscriber_image = self.create_subscription(Image, "/IBVS/sensor/camera", self.__callback_on_frame, 10)
+        self.subscriber_selected_points = self.create_subscription(PoseArray, "/IBVS/image/selected/raw", self.__callback_on_selected_points, 10)
 
 
     def update(self):
         if self.frame is not None:
-            self.vt._image_base(self.frame.copy(), self.fuse_distance, self.roi_factor, self.img_threshold)
-            if self.get_parameter("open_window").value :
+            self.vt._image_base(self.frame.copy(), self.param_roi_factor, self.param_img_threshold)
+            if self.param_show_image and self.param_debug:
                 uImage.show_image(self.frame, name="image", timeout=1000)
-                if self.get_parameter("trackbar").value:
-                    self.roi_factor = cv2.getTrackbarPos('ROI Factor','image')
-                    self.fuse_distance = cv2.getTrackbarPos('Fuse disance','image')
-                    self.img_threshold = cv2.getTrackbarPos('IMG Threshold','image')
-
 
             self.frame = None
-        
-
-    def publishers(self):
-        self.publisher_pts_tracked = self.create_publisher(PoseArray, '/camera/points/detected/meter', 10) 
-        self.publisher_pts_tracked_center = self.create_publisher(PoseArray, '/camera/points/detected/center', 10) 
-        self.publisher_pts_tracked_raw = self.create_publisher(PoseArray, '/camera/points/detected/raw', 10) 
-
-        self.publisher_mask = self.create_publisher(Image, "/camera/mask", 10)
-        self.publisher_mask_colored = self.create_publisher(Image, "/camera/mask/colored", 10)
-
-
-    def subscribers(self):
-        self.subscriber_image = self.create_subscription(Image, "/camera/image", self.__callback_on_frame, 10)
-        self.subscriber_selected_points = self.create_subscription(PoseArray, "/camera/points/selected/raw", self.__callback_on_selected_points, 10)
 
 
     def __callback_on_frame(self, data):
@@ -109,15 +88,15 @@ class ImageTracker(bc.BaseRos2):
             self.publisher_pts_tracked_raw.publish(msg)
         elif topic == "Tracking/mask/colored":
             self.log('info', "on mask")
-            if self.debug == True:
+            if self.param_debug == True:
                 self.publisher_mask_colored.publish(msg)
-            if self.get_parameter("open_window").value:
+            if self.param_show_mask and self.param_debug:
                 uImage.show_image(data, name="mask colored")
         elif topic == "Tracking/mask":
             self.log('info', "on mask")
-            if self.debug == True:
+            if self.param_debug:
                 self.publisher_mask.publish(msg)
-            if self.get_parameter("open_window").value:
+            if self.param_show_mask and self.param_debug:
                 uImage.show_image(data, name="mask")
 
 def main(argv=None):
