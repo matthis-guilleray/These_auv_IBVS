@@ -18,7 +18,7 @@ class ControllerFrame(bc.BaseRos2):
         super().run_parameters()
 
         self.declare_parameter("param_rotation_order", "yxz")
-        self.declare_parameter("param_rotation_value", [90, 90]) # Float not allowed
+        self.declare_parameter("param_rotation_value", [90, 90, 0]) # Float not allowed
         self.declare_parameter("param_translation_value_x", 0.20)
         self.declare_parameter("param_translation_value_y", 0)
         self.declare_parameter("param_translation_value_z", 0)
@@ -27,7 +27,7 @@ class ControllerFrame(bc.BaseRos2):
     def run_subscribers(self):
         super().run_subscribers()
         
-        self.subscriber_command_camera = self.create_subscription(Twist, "/IBVS/controller/command/camera", self.__callback_command_camera, 10)
+        self.subscriber_command_camera = self.create_subscription(Twist, "/IBVS/controller/command/camera", self._callback_command_camera, 10)
         
 
     def run_publishers(self):
@@ -39,12 +39,13 @@ class ControllerFrame(bc.BaseRos2):
             matrix_rotation = R.from_euler(self.param_rotation_order, self.param_rotation_value, degrees=True)
             vector_trsl = [self.param_translation_value_x, self.param_translation_value_y, self.param_translation_value_z]
             command_robot = uCont.trsf_velocity(matrix_rotation.as_matrix(), vector_trsl, self.command_camera)
-            self.publisher_command_robot.publish(uRos.velocity_to_Twists(command_robot, linear_first=False))
+            self.publisher_command_robot.publish(uRos.velocity_to_Twists(command_robot, linear_first=True))
+            self.command_camera = None
             
         return super().update()
     
-    def __callback_command_camera(self, data:Twist):
-        self.command_camera = uRos.twist_to_velocity(data, linear_first=False)
+    def _callback_command_camera(self, data:Twist):
+        self.command_camera = uRos.twist_to_velocity(data, linear_first=True)
         
 
 

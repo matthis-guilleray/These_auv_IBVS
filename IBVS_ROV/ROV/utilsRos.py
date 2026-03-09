@@ -25,6 +25,8 @@ def poseArray_to_points(pose_array):
 
 
 def velocity_to_Twists(data, linear_first=True):
+    for i in range(len(data)):
+        data[i] = float(data[i])
     if linear_first:
         linear = Vector3(x=data[0], y=data[1], z=data[2])
         angular = Vector3(x=data[3], y=data[4], z=data[5])

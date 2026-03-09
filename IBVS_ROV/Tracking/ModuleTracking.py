@@ -79,8 +79,6 @@ class VisualTracking:
             pts_new_selected = utilsRoi.roi_select_points(roi, pts_new)
             try:
                 status, board_points = utilsTracking.order_points(pts_new_selected)
-                if (status == False):
-                    self.interface.log("error", f"Points : {board_points}")
             except ValueError as e: 
                 self.interface.log("error", f"Value error : {str(e)}")
                 return False

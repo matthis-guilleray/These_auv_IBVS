@@ -9,6 +9,7 @@ from . import class_base as bc
 from .Tracking import ModuleTracking as mT
 from .Tracking.common import utilsImage as uImage
 from .ROV import utilsRos as uRos
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 
 
 class ImageTracker(bc.BaseRos2):
@@ -35,32 +36,47 @@ class ImageTracker(bc.BaseRos2):
     
     def run_publishers(self):
         super().run_publishers()
-        self.publisher_pts_tracked = self.create_publisher(PoseArray, '/IBVS/image/detected/meter', 10) 
-        self.publisher_pts_tracked_center = self.create_publisher(PoseArray, '/IBVS/image/detected/center', 10) 
-        self.publisher_pts_tracked_raw = self.create_publisher(PoseArray, '/IBVS/image/detected/raw', 10) 
-        self.publisher_mask = self.create_publisher(Image, "/IBVS/image/debug/mask", 10)
-        self.publisher_mask_colored = self.create_publisher(Image, "/IBVS/image/debug/mask/colored", 10)
+        qos_profile = QoSProfile(
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=1
+        )
+        self.publisher_pts_tracked = self.create_publisher(PoseArray, '/IBVS/image/detected/meter', qos_profile) 
+        self.publisher_pts_tracked_center = self.create_publisher(PoseArray, '/IBVS/image/detected/center', qos_profile) 
+        self.publisher_pts_tracked_raw = self.create_publisher(PoseArray, '/IBVS/image/detected/raw', qos_profile) 
+        self.publisher_mask = self.create_publisher(Image, "/IBVS/image/debug/mask", qos_profile)
+        self.publisher_mask_colored = self.create_publisher(Image, "/IBVS/image/debug/mask/colored", qos_profile)
+
 
 
     def run_subscribers(self):
+        qos_profile = QoSProfile(
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=1
+        )
         super().run_subscribers()
-        self.subscriber_image = self.create_subscription(Image, "/IBVS/sensor/camera", self.__callback_on_frame, 10)
-        self.subscriber_selected_points = self.create_subscription(PoseArray, "/IBVS/image/selected/raw", self.__callback_on_selected_points, 10)
+        self.subscriber_image = self.create_subscription(Image, "/IBVS/sensor/camera", self.__callback_on_frame, qos_profile)
+        self.subscriber_selected_points = self.create_subscription(PoseArray, "/IBVS/image/selected/raw", self.__callback_on_selected_points, qos_profile)
 
+
+    def _handle_image(self, image):
+        self.vt._image_base(image, self.param_roi_factor, self.param_img_threshold)
+        if self.param_show_image and self.param_debug:
+            uImage.show_image(self.frame, name="image", timeout=1000)
 
     def update(self):
         if self.frame is not None:
-            self.vt._image_base(self.frame.copy(), self.param_roi_factor, self.param_img_threshold)
-            if self.param_show_image and self.param_debug:
-                uImage.show_image(self.frame, name="image", timeout=1000)
+            """self._handle_image(self.frame)
 
-            self.frame = None
+            self.frame = None"""
+            pass
 
 
     def __callback_on_frame(self, data):
-        self.log("info", "Frame received")
         cv_image = self.cv_bridge.imgmsg_to_cv2(data)
-        self.frame = cv_image        
+        self.frame = cv_image   
+        self._handle_image(self.frame)
 
 
     def __callback_on_selected_points(self, data):
@@ -71,29 +87,28 @@ class ImageTracker(bc.BaseRos2):
 
 
     def publish(self, topic, data, verbose):
+        verbose = "notset"
         self.log(verbose, f"topic : {topic}, data : {data}")
         msg = None
         if "points" in topic:
             msg = uRos.points_to_poseArray(data)
         if 'mask' in topic:
-             msg = self.cv_bridge.cv2_to_imgmsg(data, "rgb8")        
+             msg = self.cv_bridge.cv2_to_imgmsg(data, "8UC3")        
         if topic == "Tracking/points/meter":
-            self.log("info", f"Publsihing : {msg}")
+            self.log(verbose, f"Publsihing : {msg}")
             self.publisher_pts_tracked.publish(msg)
         elif topic == "Tracking/points/center":
-            self.log("info", f"Publsihing : {msg}")
+            self.log(verbose, f"Publsihing : {msg}")
             self.publisher_pts_tracked_center.publish(msg)
         elif topic == "Tracking/points/raw":
-            self.log("info", f"Publsihing : {msg}")
+            self.log(verbose, f"Publsihing : {msg}")
             self.publisher_pts_tracked_raw.publish(msg)
         elif topic == "Tracking/mask/colored":
-            self.log('info', "on mask")
             if self.param_debug == True:
                 self.publisher_mask_colored.publish(msg)
             if self.param_show_mask and self.param_debug:
                 uImage.show_image(data, name="mask colored")
         elif topic == "Tracking/mask":
-            self.log('info', "on mask")
             if self.param_debug:
                 self.publisher_mask.publish(msg)
             if self.param_show_mask and self.param_debug:
@@ -101,7 +116,7 @@ class ImageTracker(bc.BaseRos2):
 
 def main(argv=None):
     rclpy.init(args=argv)
-    blueRov = ImageTracker(frequency=30, name="Tracker", rclpy=rclpy)
+    blueRov = ImageTracker(frequency=60, name="Tracker", rclpy=rclpy)
     blueRov.node_run()
 
 if __name__ == '__main__':

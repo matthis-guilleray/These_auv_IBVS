@@ -14,8 +14,8 @@ setup(
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),        
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch')),        
-        (os.path.join('share', package_name, 'config'), glob('config/*.config.yaml')),
-        (os.path.join('share', package_name, 'lib'), glob('*.py')),                                                
+        (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
+        (os.path.join('share', package_name, 'lib'), glob('*.py')),                                      
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -34,17 +34,19 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'Tester_Command_IBVS = IBVS_ROV.Tester_IBVS:main',
-            'Tester_Command_camera = IBVS_ROV.Controller_camera:main',
-            'Tester_RcIn = IBVS_ROV.Tester_Channel:main',
-            'Tester_Base = IBVS_ROV.class_BlueRov:main',
+            'class_BlueRov = IBVS_ROV.class_BlueRov:main',
+            'Tester_IBVS = IBVS_ROV.Tester_IBVS:main',
+            'Tester_Command = IBVS_ROV.Tester_Command:main',
+            'Tester_Channel_RCIN = IBVS_ROV.Tester_Channel_RCIN:main',
+            'Tester_Channel = IBVS_ROV.Tester_Channel:main',
             
-            'Image_Track = IBVS_ROV.Image_Tracker:main',
-            'Image_Select = IBVS_ROV.Image_SelectPoints:main',
-            'Image_VideoGrabber = IBVS_ROV.Image_videoGrabber:main',
+            'Image_Tracker = IBVS_ROV.Image_Tracker:main',
+            'Image_SelectPoints = IBVS_ROV.Image_SelectPoints:main',
+            'Image_videoGrabber = IBVS_ROV.Image_videoGrabber:main',
+            
 
             'Controller_Camera = IBVS_ROV.Controller_Camera:main',
-            'Controller_frame = IBVS_ROV.Controller_Frame:main'
+            'Controller_Frame = IBVS_ROV.Controller_Frame:main'
         ],
     },
 )

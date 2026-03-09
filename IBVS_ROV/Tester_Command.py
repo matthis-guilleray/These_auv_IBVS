@@ -7,6 +7,9 @@ from .ROV import utilsValue as uVal
 
 class TesterCommand(br.BlueRov):
 
+    def __init__(self, rclpy, frequency_main, name):
+        super().__init__(rclpy, frequency_main, name)
+
     def run_parameters(self):
         super().run_parameters()
         self.declare_parameter('param_topic_test_camera', "/IBVS/controller/command/camera")
@@ -15,32 +18,32 @@ class TesterCommand(br.BlueRov):
 
     def run_publishers(self):
         super().run_publishers()
-        self.create_subscription(Twist, self.param_topic_test_robot, self.__callback_cmd_vel_robot, 10)
-        
+        self.publisher_topic_camera = self.create_publisher(Twist, self.param_topic_test_camera, 10)     
 
 
     def run_subscribers(self):
         super().run_subscribers()
-        self.publisher_topic_camera = self.create_publisher(Twist, self.param_topic_test_camera, 10)
+        self.create_subscription(Twist, self.param_topic_test_robot, self._callback_cmd_vel_robot, 10)
+        
 
     
-    def __callback_cmd_vel_robot(self, cmd_vel:Twist):
+    def _callback_cmd_vel_robot(self, cmd_vel:Twist):
         # Extract cmd_vel message
         if (self.joystick_is_automatic()):
-            self.__callback_cmd_vel_joy(cmd_vel)
+            self.set_twist(cmd_vel=cmd_vel)
 
 
-    def __callback_cmd_vel_joy(self, cmd_vel:Twist):
+    def _callback_cmd_manual_vel(self, cmd_vel:Twist):
         # Extract cmd_vel message
-        super().__callback_cmd_vel_joy(cmd_vel)
-
-        self.publisher_topic_camera.publish(cmd_vel)
+        super()._callback_cmd_manual_vel(cmd_vel)
+        if self.joystick_is_automatic():
+            self.publisher_topic_camera.publish(cmd_vel)
 
 
 
 def main(argv=None):
     rclpy.init(args=argv)
-    obj = TesterCommand(rclpy, 1, "BlueRov", True)
+    obj = TesterCommand(rclpy, 1, "BlueRov")
     obj.node_run()
     rclpy.shutdown()
     rclpy

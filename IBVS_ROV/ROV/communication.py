@@ -4,11 +4,9 @@ from mavros_msgs.srv import CommandLong, StreamRate
 from mavros_msgs.msg import OverrideRCIn
 from . import utilsValue as uVal
 
-rc_in_override_pwm_max = 1900
-rc_in_override_pwm_min = 1100
-
 
 def blueRov_create_client(node, message_type = CommandLong, topic='/cmd/command'):
+    topic = node.namespace + topic
     node.log("info", f"Creating client : {topic}")
     node.log("info", f"Message : {message_type}")
     cli = node.create_client(message_type, topic)
@@ -103,6 +101,34 @@ def set_override_rcin_neutral(node):
         1500, 1500, 1500, 1500, 1500, 1500, channel_other=channel_other
     )
 
+def set_override_rcin_from_value(node, channel_index, channel_value):
+    pitch, roll, throttle, forward, lateral, yaw = 1500, 1500, 1500, 1500, 1500, 1500
+    
+    match channel_index:
+        case 0:
+            pitch = channel_value
+        case 1: 
+            roll = channel_value
+        case 2: 
+            throttle = channel_value
+        case 3: 
+            yaw = channel_value
+        case 4: 
+            forward = channel_value
+        case 5: 
+            lateral = channel_value
+
+    set_override_rcin(
+            node=node, 
+            channel_pitch=pitch,
+            channel_roll=roll,
+            channel_throttle=throttle,
+            channel_forward=forward,
+            channel_lateral=lateral,
+            channel_yaw=yaw,
+            channel_other=[]
+        )
+
 
 def set_override_rcin(node, 
                     channel_pitch, 
@@ -113,23 +139,23 @@ def set_override_rcin(node,
                     channel_lateral,
                     channel_other = [],
                     ):
-    
-    node.log("info", f"p : {channel_pitch}, r : {channel_roll}, t : {channel_throttle}, y : {channel_yaw}, l : {channel_lateral}")
-    node.log("info", f"Channel other :{str(channel_other)}")
 
     msg_override = OverrideRCIn()
-    msg_override.channels[0] = np.uint(uVal.map_value_saturation(channel_pitch, rc_in_override_pwm_min, rc_in_override_pwm_max))  # pulseCmd[4]--> pitch
-    msg_override.channels[1] = np.uint(uVal.map_value_saturation(channel_roll, rc_in_override_pwm_min, rc_in_override_pwm_max))  # pulseCmd[3]--> roll
-    msg_override.channels[2] = np.uint(uVal.map_value_saturation(channel_throttle, rc_in_override_pwm_min, rc_in_override_pwm_max))  # pulseCmd[2]--> heave
-    msg_override.channels[3] = np.uint(uVal.map_value_saturation(channel_yaw, rc_in_override_pwm_min, rc_in_override_pwm_max))  # pulseCmd[5]--> yaw
-    msg_override.channels[4] = np.uint(uVal.map_value_saturation(channel_forward, rc_in_override_pwm_min, rc_in_override_pwm_max))  # pulseCmd[0]--> surge
-    msg_override.channels[5] = np.uint(uVal.map_value_saturation(channel_lateral, rc_in_override_pwm_min, rc_in_override_pwm_max))  # pulseCmd[1]--> sway
+    msg_override.channels[0] = map_val_node(node, channel_pitch)  # pulseCmd[4]--> pitch
+    msg_override.channels[1] = map_val_node(node, channel_roll)  # pulseCmd[3]--> roll
+    msg_override.channels[2] = map_val_node(node, channel_throttle)  # pulseCmd[2]--> heave
+    msg_override.channels[3] = map_val_node(node, channel_yaw)  # pulseCmd[5]--> yaw
+    msg_override.channels[4] = map_val_node(node, channel_forward)  # pulseCmd[0]--> surge
+    msg_override.channels[5] = map_val_node(node, channel_lateral)  # pulseCmd[1]--> sway
     for i in range(6, 17+1):
         msg_override.channels[i] = 0
         if (len(channel_other) > i-6):
             msg_override.channels[i] = channel_other[i-6]
-        
+     
     node.publisher_override_rc_in.publish(msg_override)
+
+def map_val_node(node, value):
+    return uVal.map_value_saturation(value, node.param_pwm_min, node.param_pwm_max)
 
 
 def set_override_rcin_value(node, index, value):

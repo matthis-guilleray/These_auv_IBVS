@@ -38,13 +38,13 @@ class BlueRov(bc.BaseRos2):
 
 
 
-    def __init__(self, rclpy, frequency_main, name, ignore_arm = True):
-        super(BlueRov, self).__init__(rclpy=rclpy, frequency=frequency_main, name=name)
-        if (ignore_arm == False):
+    def __init__(self, rclpy, frequency_main, name):
+        super(BlueRov, self).__init__(rclpy=rclpy, frequency=frequency_main, name=name, namespace="/bluerov2")
+        if (self.param_ignore_arm == False):
             self.client_arming = cmBR.blueRov_create_client(self)
             cmBR.set_disarm(self, self.client_arming)
             cmBR.set_stream_rate(self, 25)
-        self.ignore_arm = ignore_arm
+        self.app_name = "IBVS"
 
 
     def enter(self):
@@ -58,7 +58,7 @@ class BlueRov(bc.BaseRos2):
         """
         Super function called on node stop
         """
-        if self.ignore_arm == False:
+        if self.param_ignore_arm == False:
             cmBR.set_disarm(self, self.client_arming)
         self.log("info", "Ending RosPin")
 
@@ -72,14 +72,14 @@ class BlueRov(bc.BaseRos2):
             self.mode_requested["robot_disarm"] = True
 
         if self.mode_requested["robot_arm"] == True and self.status_arm_logic == False:
-            if self.ignore_arm == False:
+            if self.param_ignore_arm == False:
                 cmBR.set_arm(self, self.client_arming)
 
             self.mode_requested["robot_disarm"] = False
             self.mode_requested["robot_arm"] = False
 
         if self.mode_requested["robot_disarm"] == True:
-            if self.ignore_arm == False:
+            if self.param_ignore_arm == False:
                 cmBR.set_disarm(self, self.client_arming)
             self.mode_requested["robot_disarm"] = False
             self.mode_requested["robot_arm"] = False
@@ -89,7 +89,7 @@ class BlueRov(bc.BaseRos2):
 
         if self.status_arm_logic is None:
             self.status_arm_logic = self.status_arm_real
-            self.log("info", f"Arming status : {self.status_arm_real}")
+            self.log("warning", f"Arming status : {self.status_arm_real}")
 
 
     def run_subscribers(self):
@@ -99,35 +99,44 @@ class BlueRov(bc.BaseRos2):
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=1
         )
-
-        self.subscriber_joystick = self.create_subscription(Joy, "/joy", self.__callback_set_cmd_bp, qos_profile=qos_profile)
-        self.subscriber_cmdvel = self.create_subscription(Twist, "/cmd_vel", self.__callback_cmd_vel_joy, qos_profile=qos_profile)
-        self.subscriber_imu = self.create_subscription(Imu, "/imu/data", self.__callback_imu, qos_profile=qos_profile)
-        self.subscriber_battery = self.create_subscription(BatteryState, "/battery", self.__callback_battery, 
+        self.log("info", "joy : " + self.namespace+"/joy")
+        self.subscriber_joystick = self.create_subscription(Joy, self.namespace+"/joy", self._callback_set_cmd_bp, qos_profile=qos_profile)
+        self.subscriber_cmdvel = self.create_subscription(Twist, self.namespace+"/cmd_vel", self._callback_cmd_manual_vel, qos_profile=qos_profile)
+        self.subscriber_imu = self.create_subscription(Imu, self.namespace+"/imu/data", self._callback_imu, qos_profile=qos_profile)
+        self.subscriber_battery = self.create_subscription(BatteryState, self.namespace+"/battery", self._callback_battery, 
                                                            qos_profile=QoSProfile(reliability=QoSReliabilityPolicy.BEST_EFFORT, 
                                                                                   history=QoSHistoryPolicy.KEEP_LAST, 
                                                                                   depth=1))
+        self.create_subscription(Twist, "/"+self.app_name+"/controller/command/robot", self.__callback_cmd_vel_robot, qos_profile)
 
 
     def run_publishers(self):
-        self.publisher_override_rc_in = self.create_publisher(OverrideRCIn, "/rc/override", QOS_PROFILE)
-        self.publisher_angle_degrees = self.create_publisher(Twist, '/angle_degree', QOS_PROFILE)
-        self.publisher_depth = self.create_publisher(Float64, '/depth', QOS_PROFILE)
-        self.publisher_angular_velocity = self.create_publisher(Twist, '/angular_velocity', QOS_PROFILE)
-        self.publisher_linear_velocity = self.create_publisher(Twist, '/linear_velocity', QOS_PROFILE)
+        self.publisher_override_rc_in = self.create_publisher(OverrideRCIn, self.namespace+"/rc/override", QOS_PROFILE)
+        self.publisher_angle_degrees = self.create_publisher(Twist, self.namespace+'/angle_degree', QOS_PROFILE)
+        self.publisher_depth = self.create_publisher(Float64, self.namespace+'/depth', QOS_PROFILE)
+        self.publisher_angular_velocity = self.create_publisher(Twist, self.namespace+'/angular_velocity', QOS_PROFILE)
+        self.publisher_linear_velocity = self.create_publisher(Twist, self.namespace+'/linear_velocity', QOS_PROFILE)
 
 
     def run_parameters(self):
         super().run_parameters()
-        self.declare_parameter("param_battery_min_warn", 16.1)
-        self.declare_parameter("param_battery_min_fail", 15.9)
-        self.declare_parameter("param_gain_vx", 1)
-        self.declare_parameter("param_gain_vy", 1)
-        self.declare_parameter("param_gain_vz", 1)
-        self.declare_parameter("param_gain_rx", 1)
-        self.declare_parameter("param_gain_ry", 1)
-        self.declare_parameter("param_gain_rz", 1)
+        self.declare_parameter("param_battery_min_warn", 15.3)
+        self.declare_parameter("param_battery_min_fail", 14.0)
+        self.declare_parameter("param_gain_global", 1.0)
+        self.declare_parameter("param_gain_vx", 1.0)
+        self.declare_parameter("param_gain_vy", 1.0)
+        self.declare_parameter("param_gain_vz", 1.0)
+        self.declare_parameter("param_gain_rx", 1.0)
+        self.declare_parameter("param_gain_ry", 1.0)
+        self.declare_parameter("param_gain_rz", 1.0)
         self.declare_parameter("param_stop", False)
+        self.declare_parameter("param_ignore_arm", True)
+
+        
+        self.declare_parameter('param_neutral', 1500)
+
+        self.declare_parameter('param_pwm_max', 1900)
+        self.declare_parameter('param_pwm_min', 1100)
 
 
 
@@ -139,8 +148,7 @@ class BlueRov(bc.BaseRos2):
         return self.mode_requested["control_autom"]
     
 
-    def __callback_set_cmd_bp(self, data):
-        self.log("info", data.buttons)
+    def _callback_set_cmd_bp(self, data):
         if data.buttons[BP_ARM] == 1 :
             self.log("info", "Arming")
             self.mode_requested["robot_arm"] = True
@@ -162,24 +170,30 @@ class BlueRov(bc.BaseRos2):
         self.mode_requested["control_neutral"] = data.buttons[BP_NEUTRAL]
         
     
-    def __callback_cmd_vel_joy(self, cmd_vel):
+    def _callback_cmd_manual_vel(self, cmd_vel):
         if bool(self.joystick_is_mode_manual()):
             self.set_twist(cmd_vel)
 
     def set_twist(self, cmd_vel:Twist):
         # Extract cmd_vel message
-        roll_left_right = uVal.map_value_scale(cmd_vel.angular.x)*self.param_gain_rx
-        yaw_left_right = uVal.map_value_scale(cmd_vel.angular.z)*self.param_gain_rz
-        ascend_descend = uVal.map_value_scale(cmd_vel.linear.z)*self.param_gain_vz
-        forward_reverse = uVal.map_value_scale(-cmd_vel.linear.x)*self.param_gain_vx
-        lateral_left_right = uVal.map_value_scale(cmd_vel.linear.y)*self.param_gain_vy
-        pitch_left_right = uVal.map_value_scale(cmd_vel.angular.y)*self.param_gain_ry
+        roll_left_right = self._map_value(cmd_vel.angular.x, self.param_gain_rx)
+        yaw_left_right = self._map_value(cmd_vel.angular.z, self.param_gain_rz)
+        ascend_descend = self._map_value(cmd_vel.linear.z, self.param_gain_vz)
+        forward_reverse = self._map_value(cmd_vel.linear.x, self.param_gain_vx)
+        lateral_left_right = self._map_value(cmd_vel.linear.y, self.param_gain_vy)
+        pitch_left_right = self._map_value(cmd_vel.angular.y, self.param_gain_ry)
 
         cmBR.set_override_rcin(self, pitch_left_right, roll_left_right, ascend_descend, yaw_left_right, forward_reverse,
-                             lateral_left_right)
+                             lateral_left_right)      
 
+    def _map_value(self, value, gain):
+        return uVal.map_value_scale(value, gain=gain*self.param_gain_global, neutral=self.param_neutral, scale=self.param_neutral - self.param_pwm_min)
 
-    def __callback_battery(self, battery:BatteryState):
+    def _callback_cmd_automatic_vel(self, cmd_vel:Twist):
+        if (self.joystick_is_automatic()):
+            self.set_twist(cmd_vel)
+
+    def _callback_battery(self, battery:BatteryState):
         if battery.voltage <= self.param_battery_min_fail:
             self.log("error", f"Battery Error : too low : voltage : {battery.voltage}")
             raise SystemError(f"Battery error : {battery.voltage}v")
@@ -188,7 +202,7 @@ class BlueRov(bc.BaseRos2):
             self.supress_battery_warning = True
         
 
-    def __callback_imu(self, data):
+    def _callback_imu(self, data):
         pass
 
 

@@ -13,11 +13,12 @@ class BaseRos2(Node):
     timer_update:rclpy.timer.Timer
     rclpy:rclpy
 
-    def __init__(self, rclpy, name="BaseRos2", frequency=30):
+    def __init__(self, rclpy, name="BaseRos2", frequency=30, namespace=""):
         super().__init__(name)
         self.dT = 1/frequency
         self._log = self.get_logger()
         self.rclpy = rclpy
+        self.namespace = namespace
         self.run_parameters()
         self.run_subscribers()
         self.run_publishers()

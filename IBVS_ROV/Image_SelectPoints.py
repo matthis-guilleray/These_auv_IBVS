@@ -4,6 +4,7 @@ from sensor_msgs.msg import Image #new This line imports the ROS 2 message type
 from cv_bridge import CvBridge  #new converting between ROS Image messages and OpenCV images (numpy arrays).
 from geometry_msgs.msg import PoseArray
 from . import class_base as bc
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 
 from .Tracking import ModuleTracking as mT
 from .ROV import utilsRos as uRos
@@ -21,7 +22,12 @@ class PointsSelection(bc.BaseRos2):
 
 
     def run_subscribers(self):
-        self.subscriber_image = self.create_subscription(Image, "/IBVS/sensor/camera", self._callback_on_frame, 10)
+        qos_profile = QoSProfile(
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=1
+        )
+        self.subscriber_image = self.create_subscription(Image, "/IBVS/sensor/camera", self._callback_on_frame, qos_profile)
 
 
     def run_publishers(self):
@@ -35,18 +41,20 @@ class PointsSelection(bc.BaseRos2):
         if (image is not None):
             self.log("info", "Selecting points on an image")
             self.tracker.is_selecting = True
-            self.tracker.on_image(image)
+            try:
+                self.tracker.on_image(image)
+            except ValueError as e:
+                self.log("error", f"Not enough points : {str(e)}")
             
     
     def _callback_on_frame(self, image):
-        self.log("info", "Frame received")
         cv_image = self.cv_bridge.imgmsg_to_cv2(image)
         self.image = cv_image
             
 
     def publish(self, topic, data, verbose):
         msg = uRos.points_to_poseArray(data)
-        self.log("info", f"Topic : {topic}, data : {msg}")
+        self.log("debug", f"Topic : {topic}, data : {msg}")
 
 
         if "Tracking/pointsSelected/raw" in topic:

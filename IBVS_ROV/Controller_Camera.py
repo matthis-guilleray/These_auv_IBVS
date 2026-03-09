@@ -8,6 +8,9 @@ from .ROV import utilsRos as uRos
 from std_msgs.msg import Float32, Float32MultiArray
 from .Tracking.common import utilsController as uCont
 
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
+
+
 
 class CameraController(bc.BaseRos2):
 
@@ -20,7 +23,7 @@ class CameraController(bc.BaseRos2):
     def run_parameters(self):
         super().run_parameters()
         self.log("info", "Creating Parameters")
-        self.declare_parameter("param_lambda", [1, 1, 1, 1, 1, 1])
+        self.declare_parameter("param_lambda", 0.3)
         self.declare_parameter("param_attach_fab", False)
         self.declare_parameter("param_zValue_isSet", True)
         self.declare_parameter("param_zValue_default",1)
@@ -28,15 +31,22 @@ class CameraController(bc.BaseRos2):
 
     def run_subscribers(self):
         super().run_subscribers()
+
+        qos_profile = QoSProfile(
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=1
+        )
         self.log("info", "Creating Subscribers")
+
         if self.param_attach_fab == True:
             self.camera_pts_select = self.create_subscription(Float32MultiArray, "/auv/mission_manager/desired_target_pos", self.__callback_on_pts_selected, 10) # TODO dégager le /tmp 
         else:
-            self.camera_pts_select = self.create_subscription(PoseArray, "/IBVS/image/selected/meter", self.__callback_on_pts_selected, 10) # TODO dégager le /tmp 
+            self.camera_pts_select = self.create_subscription(PoseArray, "/IBVS/image/selected/meter", self.__callback_on_pts_selected, qos_profile) # TODO dégager le /tmp 
         if self.param_attach_fab :
             self.camera_pts_detec = self.create_subscription(Float32MultiArray, "/auv/image_computer/target_pos_m", self.__callback_on_pts_detected, 10)
         else:
-            self.camera_pts_detec = self.create_subscription(PoseArray, "/IBVS/image/detected/meter", self.__callback_on_pts_detected, 10)
+            self.camera_pts_detec = self.create_subscription(PoseArray, "/IBVS/image/detected/meter", self.__callback_on_pts_detected, qos_profile)
         
 
     def run_publishers(self):

@@ -149,7 +149,7 @@ class VideoGrabber(bc.BaseRos2):
     def run_parameters(self):
         super().run_parameters()
         self.declare_parameter("port", 5600,) 
-        self.declare_parameter("output_frame", True,) 
+        self.declare_parameter("output_frame", False,) 
         self.declare_parameter("ros/publish", True,)
 
         self.declare_parameter("image_width", 1920)

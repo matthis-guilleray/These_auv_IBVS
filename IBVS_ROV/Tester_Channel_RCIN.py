@@ -1,6 +1,7 @@
 from . import class_BlueRov as br
 from .ROV import communication as cmBr
 import rclpy
+import time
 
 class RcInTester(br.BlueRov):
 
@@ -8,6 +9,9 @@ class RcInTester(br.BlueRov):
     value_selected = None
     iterations = 5
     iterations_done = 5
+
+    def run_parameters(self):
+        super().run_parameters()
 
     def _get_int_from_keyboard(self, text):
         print("Question ", "-"*60)
@@ -38,9 +42,11 @@ class RcInTester(br.BlueRov):
             if self.channel_selected is not None and self.value_selected is not None:
                 cmBr.set_override_rcin_value(self, self.channel_selected, self.value_selected)
                 self.iterations_done -=1
+                time.sleep(0.7)
                 self.log("info", self.iterations_done)
 
             if self.iterations_done == 0:
+                cmBr.set_override_rcin_neutral(self)
                 self.log("info", f"Testing done : channel : {self.channel_selected}, value : {self.value_selected}")
                 self.channel_selected = None
                 self.value_selected = None
@@ -54,7 +60,7 @@ class RcInTester(br.BlueRov):
 
 def main(argv=None):
     rclpy.init(args=argv)
-    obj = RcInTester(rclpy, 1, "BlueRov", True)
+    obj = RcInTester(rclpy=rclpy, frequency_main=30, name="BlueRov")
     obj.node_run()
     rclpy.shutdown()
     rclpy
