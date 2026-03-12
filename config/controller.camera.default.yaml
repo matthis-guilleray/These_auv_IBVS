@@ -1,0 +1,10 @@
+/Controller_Camera:
+  ros__parameters:
+    param_attach_fab: false
+    param_debug: true
+    param_lambda: 0.3
+    param_log_min_level: 10
+    param_zValue_default: 1
+    param_zValue_isSet: true
+    use_sim_time: false
+

@@ -1,0 +1,10 @@
+/Image_Tracker:
+  ros__parameters:
+    param_debug: true
+    param_img_threshold: 254
+    param_log_min_level: 10
+    param_roi_factor: 2
+    param_show_image: false
+    param_show_mask: false
+    use_sim_time: false
+
