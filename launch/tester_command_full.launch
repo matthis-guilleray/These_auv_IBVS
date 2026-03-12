@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>	
+	<arg name="configRobot" default="baya"/>
+	<arg name="configImageTracking" default="default"/>
+	<arg name="configControllerCamera" default="default"/>
+	<arg name="configControllerFrame" default="default"/>
+
+
+	<group>
+		<include file="$(find-pkg-share IBVS_ROV)/launch/vision.launch">
+			<arg name="configImageTracking" value="$(var configImageTracking)"/>
+		</include>
+		<include file="$(find-pkg-share IBVS_ROV)/launch/controllers.launch">
+			<arg name="configControllerCamera" value="$(var configControllerCamera)"/>
+			<arg name="configControllerFrame" value="$(var configControllerFrame)"/>
+		</include>
+
+        <include file="$(find-pkg-share IBVS_ROV)/launch/bluerov.launch" >  
+			<arg name="configRobot" value="$(var configRobot)"/>
+		</include>
+	</group>
+		
+</launch>	

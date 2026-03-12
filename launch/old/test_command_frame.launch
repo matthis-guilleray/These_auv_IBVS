@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>	
+	<group>
+        <node pkg="IBVS_ROV" exec="Image_SelectPoints" name="Image_SelectPoints" output="screen"></node>
+		<node pkg="IBVS_ROV" exec="Image_Tracker" name="Image_Tracker" output="screen"></node>
+        <node pkg="IBVS_ROV" exec="Image_videoGrabber" name="Image_videoGrabber" output="screen"></node>
+
+        <node pkg="IBVS_ROV" exec="Controller_Camera" name="Controller_Camera" output="screen"></node>
+	</group>
+		
+</launch>	

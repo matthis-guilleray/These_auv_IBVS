@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>	
+	<arg name="configImageTracking" default="default"/>
+
+	<group>
+	
+        <node pkg="IBVS_ROV" exec="Image_SelectPoints" name="Image_SelectPoints" output="screen"></node>
+		<node pkg="IBVS_ROV" exec="Image_Tracker" name="Image_Tracker" output="screen">
+			<param from="$(find-pkg-share IBVS_ROV)/config/image.tracking.$(var configImageTracking).yaml"/>
+		</node>
+	</group>
+		
+</launch>	

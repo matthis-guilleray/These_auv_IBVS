@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>	
+	<group> 
+	
+		<include file="$(find-pkg-share IBVS_ROV)/launch/mavros.launch">  
+			<arg name="namespace" value="bluerov2"/>		
+		</include>
+		<include file="$(find-pkg-share IBVS_ROV)/launch/gamepad.launch">  
+			<arg name="namespace" value="bluerov2"/>	
+		</include>		
+	</group>
+
+	<group>
+		<node pkg="IBVS_ROV" exec="Image_videoGrabber" name="Image_videoGrabber" output="screen"></node>
+	</group>
+		
+</launch>	

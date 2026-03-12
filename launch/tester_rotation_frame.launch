@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>	
+
+	<arg name="configRobot" default="baya"/>
+	<arg name="configControllerFrame" default="default"/>
+
+	<group> 
+	
+		<include file="$(find-pkg-share IBVS_ROV)/launch/run_system.launch" />  
+		
+	</group>
+	<group>
+        <node pkg="IBVS_ROV" exec="Tester_Command" name="Tester_Command" output="screen">
+			<param from="$(find-pkg-share IBVS_ROV)/config/bluerov.$(var configRobot).yaml"/>
+		</node>
+		<node pkg="IBVS_ROV" exec="Controller_Frame" name="Controller_Frame" output="screen">
+			<param from="$(find-pkg-share IBVS_ROV)/config/controller.frame.$(var configControllerFrame).yaml"/>
+		</node>
+
+	</group>
+		
+</launch>	

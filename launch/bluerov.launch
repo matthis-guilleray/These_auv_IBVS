@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg name="configRobot" default="baya"/>
+
+  <group>
+    <node pkg="IBVS_ROV" exec="class_BlueRov" name="class_BlueRov" output="screen">
+      <param from="$(find-pkg-share IBVS_ROV)/config/bluerov.$(var configRobot).yaml"/>
+    </node>
+  </group>
+</launch>
