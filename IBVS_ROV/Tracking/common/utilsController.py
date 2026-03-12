@@ -38,7 +38,7 @@ def contruct_matrix_adjoint(rot, sk):
         raise ValueError(f"Skew Matrix shape isn't 3x3")
     
 
-    m1 = np.hstack((rot, rot@sk))
+    m1 = np.hstack((rot, rot @ sk))
     m2 = np.hstack((np.zeros((3,3)), rot))
 
     adj = np.vstack((m1, m2))

@@ -118,11 +118,14 @@ def order_points(points):
     center_y = (min(ys) + max(ys)) / 2
     center = closest_point(center_x, center_y)
     status = False
+    ratio = False
     try:
-        status, _ = verify_ratio(top_left, bot_left, center, top_right, top_left)
+        status, ratio = verify_ratio(top_left, bot_left, center, top_right, top_left)
     except :
         pass
 
+    if ratio == False:
+        raise ValueError("Mire not properly detected")
 
     return status, [top_left, bot_left, center, top_right, bot_right]
 
@@ -164,6 +167,8 @@ def estimate_target_depth(points):
     )
     if retval:
         return tvecs[2][0]
+    else:
+        raise ValueError("PNP solution not found")
 
 
 

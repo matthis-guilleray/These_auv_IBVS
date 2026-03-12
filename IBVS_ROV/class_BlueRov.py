@@ -8,6 +8,7 @@ from geometry_msgs.msg import Twist
 from . import class_base as bc
 from .ROV import communication as cmBR
 from .ROV import utilsValue as uVal 
+from .ROV import utilsRos as uRos
 
 QOS_PROFILE = 10
 BP_ARM = 7 # Start bp
@@ -34,6 +35,9 @@ class BlueRov(bc.BaseRos2):
         "control_autom":False,
         "control_neutral":False
     }
+
+    cmd_autom = None
+    cmd_manual = None
     
 
 
@@ -44,7 +48,6 @@ class BlueRov(bc.BaseRos2):
             self.client_arming = cmBR.blueRov_create_client(self)
             cmBR.set_disarm(self, self.client_arming)
             cmBR.set_stream_rate(self, 25)
-        self.app_name = "IBVS"
 
 
     def enter(self):
@@ -91,6 +94,13 @@ class BlueRov(bc.BaseRos2):
             self.status_arm_logic = self.status_arm_real
             self.log("warning", f"Arming status : {self.status_arm_real}")
 
+        if self.cmd_autom is not None and self.joystick_is_automatic():
+            self.set_twist(self.cmd_autom)
+        if self.cmd_manual is not None and self.joystick_is_mode_manual():
+            self.set_twist(self.cmd_manual)
+
+        
+
 
     def run_subscribers(self):
         super().run_subscribers()
@@ -107,7 +117,7 @@ class BlueRov(bc.BaseRos2):
                                                            qos_profile=QoSProfile(reliability=QoSReliabilityPolicy.BEST_EFFORT, 
                                                                                   history=QoSHistoryPolicy.KEEP_LAST, 
                                                                                   depth=1))
-        self.create_subscription(Twist, "/"+self.app_name+"/controller/command/robot", self.__callback_cmd_vel_robot, qos_profile)
+        self.create_subscription(Twist, "/"+"IBVS"+"/controller/command/robot", self._callback_cmd_automatic_vel, qos_profile)# TODO Change IBVS to var name
 
 
     def run_publishers(self):
@@ -131,6 +141,7 @@ class BlueRov(bc.BaseRos2):
         self.declare_parameter("param_gain_rz", 1.0)
         self.declare_parameter("param_stop", False)
         self.declare_parameter("param_ignore_arm", True)
+        self.declare_parameter("param_autom_max_speed", 0.8)
 
         
         self.declare_parameter('param_neutral', 1500)
@@ -171,8 +182,7 @@ class BlueRov(bc.BaseRos2):
         
     
     def _callback_cmd_manual_vel(self, cmd_vel):
-        if bool(self.joystick_is_mode_manual()):
-            self.set_twist(cmd_vel)
+        self.cmd_manual = cmd_vel
 
     def set_twist(self, cmd_vel:Twist):
         # Extract cmd_vel message
@@ -190,8 +200,8 @@ class BlueRov(bc.BaseRos2):
         return uVal.map_value_scale(value, gain=gain*self.param_gain_global, neutral=self.param_neutral, scale=self.param_neutral - self.param_pwm_min)
 
     def _callback_cmd_automatic_vel(self, cmd_vel:Twist):
-        if (self.joystick_is_automatic()):
-            self.set_twist(cmd_vel)
+        cmd_vel = uRos.twist_cap(cmd_vel, self.param_autom_max_speed)
+        self.cmd_autom = cmd_vel
 
     def _callback_battery(self, battery:BatteryState):
         if battery.voltage <= self.param_battery_min_fail:

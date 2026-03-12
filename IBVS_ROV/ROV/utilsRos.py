@@ -56,3 +56,14 @@ def multiFloat32_to_points(pose_array):
         else:
             points.append([pose_array.data[i], pose_array.data[i+1], pose_array.data[i+2]])
     return points
+
+def twist_cap(vel:Twist, value):
+    vel.angular.x = vel.angular.x if vel.angular.x >= value else value
+    vel.angular.y = vel.angular.y if vel.angular.y >= value else value
+    vel.angular.z = vel.angular.z if vel.angular.z >= value else value
+
+    vel.linear.x = vel.linear.x if vel.linear.x >= value else value
+    vel.linear.y = vel.linear.y if vel.linear.y >= value else value
+    vel.linear.z = vel.linear.z if vel.linear.z >= value else value
+
+    return vel

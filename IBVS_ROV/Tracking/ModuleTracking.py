@@ -77,11 +77,7 @@ class VisualTracking:
         mask_colored = utilsImage.draw_points(mask_colored, self.pts_hand_selected, [255,0,0])
         if (roi != None):
             pts_new_selected = utilsRoi.roi_select_points(roi, pts_new)
-            try:
-                status, board_points = utilsTracking.order_points(pts_new_selected)
-            except ValueError as e: 
-                self.interface.log("error", f"Value error : {str(e)}")
-                return False
+            _, board_points = utilsTracking.order_points(pts_new_selected)
             board_points_ibvs = utilsImage.frame_opencv_to_ibvs(board_points, utilsImage.cam_info_width, utilsImage.cam_info_height)
             
                 

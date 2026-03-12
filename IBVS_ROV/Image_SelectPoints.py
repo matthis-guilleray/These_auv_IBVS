@@ -8,6 +8,7 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 
 from .Tracking import ModuleTracking as mT
 from .ROV import utilsRos as uRos
+from .Tracking.common import utilsTracking as uTrack
 
 class PointsSelection(bc.BaseRos2):
 
@@ -35,10 +36,18 @@ class PointsSelection(bc.BaseRos2):
         self.publisher_pts_selected_center = self.create_publisher(PoseArray, '/IBVS/image/selected/center', 10) 
         self.publisher_pts_selected_meter = self.create_publisher(PoseArray, '/IBVS/image/selected/meter', 10) 
 
+    def run_parameters(self):
+        super().run_parameters()
+        self.declare_parameter("param_points_hand_picked", False)
+
 
     def update(self):
-        image = self.image
-        if (image is not None):
+        
+        if (self.param_points_hand_picked == False):
+            self.publish_pts_center()
+
+        if (self.param_points_hand_picked and self.image is not None):
+            image = self.image
             self.log("info", "Selecting points on an image")
             self.tracker.is_selecting = True
             try:
@@ -51,6 +60,18 @@ class PointsSelection(bc.BaseRos2):
         cv_image = self.cv_bridge.imgmsg_to_cv2(image)
         self.image = cv_image
             
+
+    def publish_pts_center(self):
+        pts = [
+            uTrack.mire_p0,
+            uTrack.mire_p1,
+            uTrack.mire_p2,
+            uTrack.mire_p3,
+            uTrack.mire_p4]
+
+        msg = uRos.points_to_poseArray(pts)
+        self.publisher_pts_selected_meter.publish(msg)
+
 
     def publish(self, topic, data, verbose):
         msg = uRos.points_to_poseArray(data)

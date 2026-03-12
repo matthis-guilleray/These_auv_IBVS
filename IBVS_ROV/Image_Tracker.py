@@ -61,22 +61,22 @@ class ImageTracker(bc.BaseRos2):
 
 
     def _handle_image(self, image):
-        self.vt._image_base(image, self.param_roi_factor, self.param_img_threshold)
+        self.vt._image_base(image, roi_factor=self.param_roi_factor, img_threshold=self.param_img_threshold)
         if self.param_show_image and self.param_debug:
             uImage.show_image(self.frame, name="image", timeout=1000)
 
     def update(self):
         if self.frame is not None:
-            """self._handle_image(self.frame)
-
-            self.frame = None"""
-            pass
+            try:
+                self._handle_image(self.frame)
+            except ValueError as e:
+                if self.param_debug :
+                    self.log("error", f"Value error : {str(e)}")
 
 
     def __callback_on_frame(self, data):
         cv_image = self.cv_bridge.imgmsg_to_cv2(data)
         self.frame = cv_image   
-        self._handle_image(self.frame)
 
 
     def __callback_on_selected_points(self, data):
@@ -93,7 +93,7 @@ class ImageTracker(bc.BaseRos2):
         if "points" in topic:
             msg = uRos.points_to_poseArray(data)
         if 'mask' in topic:
-             msg = self.cv_bridge.cv2_to_imgmsg(data, "8UC3")        
+             msg = self.cv_bridge.cv2_to_imgmsg(data, "rgb8")        
         if topic == "Tracking/points/meter":
             self.log(verbose, f"Publsihing : {msg}")
             self.publisher_pts_tracked.publish(msg)
