@@ -10,6 +10,7 @@ class TesterCommand(br.BlueRov):
     def __init__(self, rclpy, frequency_main, name):
         super().__init__(rclpy, frequency_main, name)
 
+
     def run_parameters(self):
         super().run_parameters()
         self.declare_parameter('param_topic_test_camera', "/IBVS/controller/command/camera")
@@ -23,15 +24,8 @@ class TesterCommand(br.BlueRov):
 
     def run_subscribers(self):
         super().run_subscribers()
-        self.create_subscription(Twist, self.param_topic_test_robot, self._callback_cmd_vel_robot, 10)
+        self.create_subscription(Twist, self.param_topic_test_robot, self._callback_cmd_automatic_vel, 10)
         
-
-    
-    def _callback_cmd_vel_robot(self, cmd_vel:Twist):
-        # Extract cmd_vel message
-        if (self.joystick_is_automatic()):
-            self.set_twist(cmd_vel=cmd_vel)
-
 
     def _callback_cmd_manual_vel(self, cmd_vel:Twist):
         # Extract cmd_vel message
