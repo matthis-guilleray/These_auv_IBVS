@@ -34,19 +34,17 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'class_BlueRov = IBVS_ROV.class_BlueRov:main',
-            'Tester_IBVS = IBVS_ROV.Tester_IBVS:main',
-            'Tester_Command = IBVS_ROV.Tester_Command:main',
-            'Tester_Channel_RCIN = IBVS_ROV.Tester_Channel_RCIN:main',
-            'Tester_Channel = IBVS_ROV.Tester_Channel:main',
-            
-            'Image_Tracker = IBVS_ROV.Image_Tracker:main',
-            'Image_SelectPoints = IBVS_ROV.Image_SelectPoints:main',
-            'Image_videoGrabber = IBVS_ROV.Image_videoGrabber:main',
-            
+            'class_BlueRov = IBVS_ROV.Utils.BlueRov.class_BlueRov:main',
+            'Image_videoGrabber = IBVS_ROV.Utils.BlueRov.Image_videoGrabber:main',
 
-            'Controller_Camera = IBVS_ROV.Controller_Camera:main',
-            'Controller_Frame = IBVS_ROV.Controller_Frame:main'
+            'Tester_Command = IBVS_ROV.Testers.Command:main',
+            'Tester_Channel_RCIN = IBVS_ROV.Testers.Channel_RCIN:main',
+            
+            'Image_Tracker = IBVS_ROV.Tracking.ROS.Image_Tracker:main',
+            'Image_SelectPoints = IBVS_ROV.Tracking.ROS.Image_SelectPoints:main',
+            
+            'Controller_Camera = IBVS_ROV.Controller.ROS.Controller_Camera:main',
+            'Controller_Frame = IBVS_ROV.Controller.ROS.Controller_Frame:main'
         ],
     },
 )
