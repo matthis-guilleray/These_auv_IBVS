@@ -20,4 +20,4 @@ class VisualTracking:
             self.interface.log("error", "Error not enough points selected")
             return
 
-        self.interface.publish("Tracking/pointsSelected/raw", self.pts_hand_selected, verbose="debug")
+        self.interface.publish("points/raw", self.pts_hand_selected, verbose="debug")

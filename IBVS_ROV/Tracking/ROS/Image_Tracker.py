@@ -41,10 +41,8 @@ class ImageTracker(bc.BaseRos2):
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=1
         )
-        self.publisher_pts_tracked = self.create_publisher(PoseArray, '/IBVS/image/detected/meter', qos_profile) 
-        self.publisher_pts_tracked_center = self.create_publisher(PoseArray, '/IBVS/image/detected/center', qos_profile) 
         self.publisher_pts_tracked_raw = self.create_publisher(PoseArray, '/IBVS/image/detected/raw', qos_profile) 
-        self.publisher_mask = self.create_publisher(Image, "/IBVS/image/debug/mask", qos_profile)
+        self.publisher_mask = self.create_publisher(Image, "/IBVS/image/debug/mask/raw", qos_profile)
         self.publisher_mask_colored = self.create_publisher(Image, "/IBVS/image/debug/mask/colored", qos_profile)
 
 
@@ -61,7 +59,7 @@ class ImageTracker(bc.BaseRos2):
 
 
     def _handle_image(self, image):
-        self.vt._image_base(image, roi_factor=self.param_roi_factor, img_threshold=self.param_img_threshold)
+        self.vt.detect_points(image, roi_factor=self.param_roi_factor, img_threshold=self.param_img_threshold)
 
     def update(self):
         if self.frame is not None:
@@ -70,6 +68,7 @@ class ImageTracker(bc.BaseRos2):
             except ValueError as e:
                 if self.param_debug :
                     self.log("error", f"Value error : {str(e)}")
+            self.frame = None
 
 
     def __callback_on_frame(self, data):
@@ -85,26 +84,19 @@ class ImageTracker(bc.BaseRos2):
 
 
     def publish(self, topic, data, verbose):
-        verbose = "notset"
-        self.log(verbose, f"topic : {topic}, data : {data}")
         msg = None
         if "points" in topic:
             msg = uMessage.points_to_poseArray(data)
-        if 'mask' in topic:
+        elif 'mask' in topic:
              msg = self.cv_bridge.cv2_to_imgmsg(data, "rgb8")        
-        if topic == "Tracking/points/meter":
-            self.log(verbose, f"Publsihing : {msg}")
-            self.publisher_pts_tracked.publish(msg)
-        elif topic == "Tracking/points/center":
-            self.log(verbose, f"Publsihing : {msg}")
-            self.publisher_pts_tracked_center.publish(msg)
-        elif topic == "Tracking/points/raw":
-            self.log(verbose, f"Publsihing : {msg}")
+        else: 
+            raise TypeError('The topic name should at least contains points or mask')
+        if topic == "points/raw":
             self.publisher_pts_tracked_raw.publish(msg)
-        elif topic == "Tracking/mask/colored":
+        elif topic == "mask/annotated":
             if self.param_debug == True:
                 self.publisher_mask_colored.publish(msg)
-        elif topic == "Tracking/mask":
+        elif topic == "mask":
             if self.param_debug:
                 self.publisher_mask.publish(msg)
 
