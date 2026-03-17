@@ -1,0 +1,60 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+    
+
+        {
+            "name": "ROS : Controller Camera",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "IBVS_ROV.Controller.ROS.Controller_Camera",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "ROS : Select points from img",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "IBVS_ROV.Tracking.ROS.Image_SelectPoints",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "ROS : Track points from image",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "IBVS_ROV.Tracking.ROS.Image_Tracker",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "ROS : Change velocity to robot",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "IBVS_ROV.Controller.ROS.Controller_Frame",
+            "cwd": "${workspaceFolder}"
+        },
+                {
+            "name": "ROS : Run BlueRov",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "IBVS_ROV.Utils.BlueRov.class_BlueRov",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "ROS : Tester channel",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "IBVS_ROV.Testers.Channel_RCIN",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "ROS : Tester Command",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "IBVS_ROV.Testers.Command",
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
