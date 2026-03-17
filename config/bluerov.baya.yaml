@@ -1,6 +1,6 @@
 /class_BlueRov:
   ros__parameters:
-    param_battery_min_fail: 17.0
+    param_battery_min_fail: 14.0
     param_battery_min_warn: 15.3
     param_gain_global: 1.0
     param_gain_rx: 1.0

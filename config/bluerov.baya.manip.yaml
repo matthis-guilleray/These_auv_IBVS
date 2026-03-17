@@ -1,20 +1,21 @@
 /class_BlueRov:
   ros__parameters:
-    param_battery_min_fail: 13.0
+    param_autom_max_speed: 0.8
+    param_battery_min_fail: 14.0
     param_battery_min_warn: 15.3
+    param_debug: true
     param_gain_global: 1.0
     param_gain_rx: 1.0
-    param_gain_ry: 1.0
-    param_gain_rz: 1.0
+    param_gain_ry: -1.0
+    param_gain_rz: -1.0
     param_gain_vx: -1.0
-    param_gain_vy: 1.0
-    param_gain_vz: 1.0
+    param_gain_vy: -1.0
+    param_gain_vz: -1.0
     param_ignore_arm: false
+    param_log_min_level: 10
     param_neutral: 1500
     param_pwm_max: 1900
     param_pwm_min: 1100
     param_stop: false
     use_sim_time: false
-    param_debug: true
-    param_log_min_level: 10
 
