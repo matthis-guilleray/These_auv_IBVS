@@ -1,6 +1,7 @@
 import rclpy
 import rclpy.timer
 from rclpy.node import Node
+from std_msgs.msg import Header
 from datetime import datetime
 import traceback
 import rclpy.logging
@@ -12,20 +13,23 @@ class BaseRos2(Node):
     name:str
     timer_update:rclpy.timer.Timer
     rclpy:rclpy
+    
 
-    def __init__(self, rclpy, name="BaseRos2", frequency=30, namespace="", app_name=""):
-        super().__init__(name)
+    def __init__(self, rclpy, name_app, name_space, frequency=30):
+        super().__init__(name_app)
         self.dT = 1/frequency
         self._log = self.get_logger()
         self.rclpy = rclpy
-        self.namespace = namespace
-        self.app_name = app_name
+        self.name_space = name_space
+        self.name_app = name_app
+
         self.run_parameters()
         self.run_subscribers()
         self.run_publishers()
         
         self.timer_update = self.create_timer(self.dT, self.update)
-
+        if self.name_app == "" or self.name_class == "":
+            raise ValueError("name app and name class, cannot be set to nothing")
         
 
     def __enter__(self):
@@ -54,7 +58,7 @@ class BaseRos2(Node):
         pass
 
     def run_publishers(self):
-        pass
+        self.pub_state = self.create_publisher(Header, f"/{self.name_space}/{self.name_app}/state", qos_profile=10)
 
     def run_parameters(self):
         self.declare_parameter('param_debug', True)
@@ -102,6 +106,15 @@ class BaseRos2(Node):
             self.get_logger().error(f"Error: {e}")
             self.get_logger().error(traceback.format_exc())
             self.__exit__()
+
+    def set_state(self, state:str):
+        msg = Header()
+        msg.stamp = self.get_clock().now().to_msg()
+        msg.frame_id = state
+        if self.pub_state is not None:
+            self.pub_state.publish(msg)
+        else: 
+            raise ValueError("Parent publisher have not been called")
         
 
             
