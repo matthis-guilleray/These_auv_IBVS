@@ -29,7 +29,6 @@ class CameraController(bc.BaseRos2):
         super().run_parameters()
         self.log("info", "Creating Parameters")
         self.declare_parameter("param_lambda", 0.3)
-        self.declare_parameter("param_attach_fab", False)
         self.declare_parameter("param_zValue_isSet", True)
         self.declare_parameter("param_zValue_default",1)
 
@@ -43,15 +42,8 @@ class CameraController(bc.BaseRos2):
             depth=1
         )
         self.log("info", "Creating Subscribers")
-
-        if self.param_attach_fab == True:
-            self.camera_pts_select = self.create_subscription(Float32MultiArray, "/auv/mission_manager/desired_target_pos", self.__callback_on_pts_selected, 10) # TODO dégager le /tmp 
-        else:
-            self.camera_pts_select = self.create_subscription(PoseArray, "/IBVS/image/selected/raw", self.__callback_on_pts_selected, qos_profile) # TODO dégager le /tmp 
-        if self.param_attach_fab :
-            self.camera_pts_detec = self.create_subscription(Float32MultiArray, "/auv/image_computer/target_pos_m", self.__callback_on_pts_detected, 10)
-        else:
-            self.camera_pts_detec = self.create_subscription(PoseArray, "/IBVS/image/detected/raw", self.__callback_on_pts_detected, qos_profile)
+        self.camera_pts_select = self.create_subscription(PoseArray, "/IBVS/image/selected/raw", self.__callback_on_pts_selected, qos_profile)
+        self.camera_pts_detec = self.create_subscription(PoseArray, "/IBVS/image/detected/raw", self.__callback_on_pts_detected, qos_profile)
         
 
     def run_publishers(self):
@@ -78,10 +70,7 @@ class CameraController(bc.BaseRos2):
         
 
     def __callback_on_pts_selected(self, data:PoseArray):
-        if self.param_attach_fab:
-            tmp = uMessage.multiFloat32_to_points(data)
-        else:
-            tmp = uMessage.poseArray_to_points(data)
+        tmp = uMessage.poseArray_to_points(data)
 
         tmp = uVal.handle_z_value(tmp, self.param_zValue_isSet, self.param_zValue_default)
         self.pts_selected_raw = tmp
@@ -90,14 +79,10 @@ class CameraController(bc.BaseRos2):
         
 
     def __callback_on_pts_detected(self, data:PoseArray):
-        if self.param_attach_fab:
-            tmp = uMessage.multiFloat32_to_points(data)
-            tmp = uVal.handle_z_value(tmp, self.param_zValue_isSet, self.param_zValue_default)
-        else:
-            tmp = uMessage.poseArray_to_points(data)
-            tmp = uVal.handle_z_value(tmp, self.param_zValue_isSet, self.param_zValue_default)
-            self.pts_detected_raw = tmp
-            tmp = uImg.list_points_to_meters(tmp)
+        tmp = uMessage.poseArray_to_points(data)
+        tmp = uVal.handle_z_value(tmp, self.param_zValue_isSet, self.param_zValue_default)
+        self.pts_detected_raw = tmp
+        tmp = uImg.list_points_to_meters(tmp)
         
         self.pts_detected = tmp
 
@@ -121,11 +106,11 @@ class CameraController(bc.BaseRos2):
         self.publisher_error_camera.publish(msg)
             
     def __publish_debug(self, data:list[list[float]]):
-        pArray = uMessage.points_to_poseArray(data)
+        msg = uMessage.points_to_poseArray(data)
         header = Header()
         header.stamp = self.get_clock().now().to_msg()
         msg.header = header
-        self.publisher_debug.publish(pArray)
+        self.publisher_debug.publish(msg)
 
 
 
