@@ -1,5 +1,6 @@
 import rclpy
 import numpy as np
+from std_msgs.msg import Header
 from geometry_msgs.msg import PoseArray
 import IBVS_ROV.Utils.ROS.class_base as bc
 from geometry_msgs.msg import Twist
@@ -106,14 +107,24 @@ class CameraController(bc.BaseRos2):
             raise ValueError("The shape is incorrect")
         msg = uMessage.velocity_to_Twists(data)
 
+        header = Header()
+        header.stamp = self.get_clock().now().to_msg()
+        msg.header = header
+
         self.publisher_vel_camera.publish(msg)
 
     def __publish_error(self, data):
         msg = uMessage.points_to_poseArray(data)
+        header = Header()
+        header.stamp = self.get_clock().now().to_msg()
+        msg.header = header
         self.publisher_error_camera.publish(msg)
             
     def __publish_debug(self, data:list[list[float]]):
         pArray = uMessage.points_to_poseArray(data)
+        header = Header()
+        header.stamp = self.get_clock().now().to_msg()
+        msg.header = header
         self.publisher_debug.publish(pArray)
 
 

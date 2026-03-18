@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-import cv2
 from sensor_msgs.msg import Image #new This line imports the ROS 2 message type 
 from cv_bridge import CvBridge  #new converting between ROS Image messages and OpenCV images (numpy arrays).
 import rclpy
+from std_msgs.msg import Header
 from geometry_msgs.msg import PoseArray
 import IBVS_ROV.Utils.ROS.class_base as bc
 
@@ -19,7 +19,7 @@ class ImageTracker(bc.BaseRos2):
     cv_bridge = CvBridge()
     vt:mD.VisualTracking
 
-    def __init__(self, rclpnode_rclpyy=rclpy, name="tracker", frequency=30):
+    def __init__(self, node_rclpy=rclpy, name="tracker", frequency=30):
         super().__init__(frequency=frequency, 
                          node_rclpy=rclpy,
                          name_app=name
@@ -87,6 +87,9 @@ class ImageTracker(bc.BaseRos2):
 
 
     def publish(self, topic, data, verbose):
+        header = Header()
+        header.stamp = self.get_clock().now().to_msg()
+
         msg = None
         if "points" in topic:
             msg = uMessage.points_to_poseArray(data)
@@ -94,6 +97,8 @@ class ImageTracker(bc.BaseRos2):
              msg = self.cv_bridge.cv2_to_imgmsg(data, "rgb8")        
         else: 
             raise TypeError('The topic name should at least contains points or mask')
+        
+        msg.header = header
         if topic == "points/raw":
             self.publisher_pts_tracked_raw.publish(msg)
         elif topic == "mask/annotated":

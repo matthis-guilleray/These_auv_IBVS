@@ -4,7 +4,7 @@ from geometry_msgs.msg import Twist
 from IBVS_ROV.Utils.ROS import utilsMessage as uRos
 import IBVS_ROV.Controller.Module.utilsController as uCont
 from scipy.spatial.transform import Rotation as R
-
+from std_msgs.msg import Header
 
 class ControllerFrame(bc.BaseRos2):
 
@@ -41,13 +41,25 @@ class ControllerFrame(bc.BaseRos2):
             matrix_rotation = R.from_euler(self.param_rotation_order, self.param_rotation_value, degrees=True)
             vector_trsl = [self.param_translation_value_x, self.param_translation_value_y, self.param_translation_value_z]
             command_robot = uCont.trsf_velocity(matrix_rotation.as_matrix(), vector_trsl, self.command_camera)
-            self.publisher_command_robot.publish(uRos.velocity_to_Twists(command_robot, linear_first=True))
+            self._publish_to_robot(command_robot)
             self.command_camera = None
             
         return super().update()
     
     def _callback_command_camera(self, data:Twist):
         self.command_camera = uRos.twist_to_velocity(data, linear_first=True)
+
+
+    def _publish_to_robot(self, command_robot):
+        header = Header()
+        header.stamp = self.get_clock().now().to_msg()
+
+        msg = uRos.velocity_to_Twists(command_robot, linear_first=True)
+        msg.header = header
+
+        self.publisher_command_robot.publish(msg)
+
+
         
 
 
