@@ -148,7 +148,7 @@ class VideoGrabber(bc.BaseRos2):
     def run_publishers(self):
         # Create a publisher for the image
         super().run_publishers()
-        self.publisher_image = self.create_publisher(Image, 'sensor/camera', 10, namespace_override=True) 
+        self.publisher_image = self.create_publisher(Image, 'sensor/camera', self.qos_profile, namespace_override=True) 
 
     def run_parameters(self):
         super().run_parameters()

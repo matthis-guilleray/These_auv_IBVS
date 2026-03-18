@@ -5,6 +5,7 @@ from cv_bridge import CvBridge  #new converting between ROS Image messages and O
 from geometry_msgs.msg import PoseArray
 import IBVS_ROV.Utils.ROS.class_base as bc
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
+from std_msgs.msg import Header
 
 import IBVS_ROV.Tracking.Module.selection as mS
 import IBVS_ROV.Utils.ROS.utilsMessage as uMessage
@@ -63,6 +64,9 @@ class PointsSelection(bc.BaseRos2):
         msg = uMessage.points_to_poseArray(data)
         self.log("debug", f"Topic : {topic}, data : {msg}")
 
+        header = Header()
+        header.stamp = self.get_clock().now().to_msg()
+        msg.header = header
 
         if "points/raw" in topic:
             self.publisher_pts_selected_raw.publish(msg)

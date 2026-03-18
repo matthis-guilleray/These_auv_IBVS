@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-import cv2
 from sensor_msgs.msg import Image #new This line imports the ROS 2 message type 
 from cv_bridge import CvBridge  #new converting between ROS Image messages and OpenCV images (numpy arrays).
 import rclpy
+from std_msgs.msg import Header
 from geometry_msgs.msg import PoseArray
 import IBVS_ROV.Utils.ROS.class_base as bc
 
@@ -18,13 +18,17 @@ class ImageTracker(bc.BaseRos2):
     frame = None
     cv_bridge = CvBridge()
     vt:mD.VisualTracking
+    flag_display_error = True
 
-    def __init__(self, rclpnode_rclpyy=rclpy, name="tracker", frequency=30):
+    def __init__(self, node_rclpy=rclpy, name="tracker", frequency=30):
         super().__init__(frequency=frequency, 
                          node_rclpy=rclpy,
                          name_app=name
                          )
         self.vt = mD.VisualTracking(self)
+        self.create_timer(5, self.__callback_on_timer_error)
+
+
         
 
     def run_parameters(self):
@@ -39,11 +43,8 @@ class ImageTracker(bc.BaseRos2):
     
     def run_publishers(self):
         super().run_publishers()
-        qos_profile = QoSProfile(
-            reliability=QoSReliabilityPolicy.BEST_EFFORT,
-            history=QoSHistoryPolicy.KEEP_LAST,
-            depth=1
-        )
+        qos_profile = self.qos_profile
+
         self.publisher_pts_tracked_raw = self.create_publisher(PoseArray, 'image/detected/raw', qos_profile, namespace_override=True) 
         self.publisher_mask = self.create_publisher(Image, "image/debug/mask/raw", qos_profile, namespace_override=True)
         self.publisher_mask_colored = self.create_publisher(Image, "image/debug/mask/colored", qos_profile, namespace_override=True)
@@ -51,11 +52,7 @@ class ImageTracker(bc.BaseRos2):
 
 
     def run_subscribers(self):
-        qos_profile = QoSProfile(
-            reliability=QoSReliabilityPolicy.BEST_EFFORT,
-            history=QoSHistoryPolicy.KEEP_LAST,
-            depth=1
-        )
+        qos_profile = self.qos_profile
         super().run_subscribers()
         self.subscriber_image = self.create_subscription(Image, "sensor/camera", self.__callback_on_frame, qos_profile, namespace_override=True)
         self.subscriber_selected_points = self.create_subscription(PoseArray, "image/selected/raw", self.__callback_on_selected_points, qos_profile, namespace_override=True)
@@ -69,8 +66,9 @@ class ImageTracker(bc.BaseRos2):
             try:
                 self._handle_image(self.frame)
             except ValueError as e:
-                if self.param_debug :
+                if self.param_debug and self.flag_display_error:
                     self.log("error", f"Value error : {str(e)}")
+                    self.flag_display_error = False
             self.frame = None
 
 
@@ -85,8 +83,14 @@ class ImageTracker(bc.BaseRos2):
         self.vt.pts_hand_selected = pts
         self.vt.pts_old_selected = self.selected_points
 
+    def __callback_on_timer_error(self):
+        self.flag_display_error = True
+
 
     def publish(self, topic, data, verbose):
+        header = Header()
+        header.stamp = self.get_clock().now().to_msg()
+
         msg = None
         if "points" in topic:
             msg = uMessage.points_to_poseArray(data)
@@ -94,6 +98,8 @@ class ImageTracker(bc.BaseRos2):
              msg = self.cv_bridge.cv2_to_imgmsg(data, "rgb8")        
         else: 
             raise TypeError('The topic name should at least contains points or mask')
+        
+        msg.header = header
         if topic == "points/raw":
             self.publisher_pts_tracked_raw.publish(msg)
         elif topic == "mask/annotated":

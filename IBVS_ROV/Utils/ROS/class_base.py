@@ -8,6 +8,8 @@ import rclpy.logging
 from rclpy.publisher import Publisher
 import time
 
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
+
 
 
 class BaseRos2(Node):
@@ -19,6 +21,8 @@ class BaseRos2(Node):
     name_app:str = None
 
     loop_time_start:float
+
+
     
 
     def __init__(self, node_rclpy:rclpy, name_app, name_space="IBVS", frequency=30):
@@ -28,6 +32,12 @@ class BaseRos2(Node):
         self.local_rclpy = node_rclpy
         self.name_space = name_space
         self.name_app = name_app
+
+        self.qos_profile = QoSProfile(
+            reliability=QoSReliabilityPolicy.RELIABLE,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=5
+        )
 
         self.run_parameters()
         self.run_subscribers()
@@ -91,7 +101,7 @@ class BaseRos2(Node):
         pass
 
     def run_publishers(self):
-        self.pub_state = self.create_publisher(Header, f"state/{self.name_app}", 10, namespace_override=True)
+        self.pub_state = self.create_publisher(Header, f"state/{self.name_app}", qos_profile=self.qos_profile, namespace_override=True)
 
     def run_parameters(self):
         self.declare_parameter('param_debug', True)

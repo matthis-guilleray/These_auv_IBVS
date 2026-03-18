@@ -22,7 +22,7 @@ class TesterCommand(br.BlueRov):
 
     def run_publishers(self):
         super().run_publishers()
-        self.publisher_topic = self.create_publisher(Twist, self.param_topic_pub, 10, namespace_override=True)     
+        self.publisher_topic = self.create_publisher(Twist, self.param_topic_pub, self.qos_profile, namespace_override=True)     
 
 
     def run_subscribers(self):
