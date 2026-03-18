@@ -18,6 +18,7 @@ class ImageTracker(bc.BaseRos2):
     frame = None
     cv_bridge = CvBridge()
     vt:mD.VisualTracking
+    flag_display_error = True
 
     def __init__(self, node_rclpy=rclpy, name="tracker", frequency=30):
         super().__init__(frequency=frequency, 
@@ -25,6 +26,9 @@ class ImageTracker(bc.BaseRos2):
                          name_app=name
                          )
         self.vt = mD.VisualTracking(self)
+        self.create_timer(5, self.__callback_on_timer_error)
+
+
         
 
     def run_parameters(self):
@@ -62,8 +66,9 @@ class ImageTracker(bc.BaseRos2):
             try:
                 self._handle_image(self.frame)
             except ValueError as e:
-                if self.param_debug :
+                if self.param_debug and self.flag_display_error:
                     self.log("error", f"Value error : {str(e)}")
+                    self.flag_display_error = False
             self.frame = None
 
 
@@ -77,6 +82,9 @@ class ImageTracker(bc.BaseRos2):
         self.selected_points = pts
         self.vt.pts_hand_selected = pts
         self.vt.pts_old_selected = self.selected_points
+
+    def __callback_on_timer_error(self):
+        self.flag_display_error = True
 
 
     def publish(self, topic, data, verbose):
