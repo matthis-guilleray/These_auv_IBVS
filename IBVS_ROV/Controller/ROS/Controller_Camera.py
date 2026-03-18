@@ -7,6 +7,7 @@ from IBVS_ROV.Utils import utilsValue as uVal
 from IBVS_ROV.Utils.ROS import utilsMessage as uMessage
 from std_msgs.msg import Float32, Float32MultiArray
 from IBVS_ROV.Controller.Module import utilsController as uCont
+from IBVS_ROV.Tracking.Module.Image import utilsImage as uImg
 
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 
@@ -42,7 +43,7 @@ class CameraController(bc.BaseRos2):
         if self.param_attach_fab == True:
             self.camera_pts_select = self.create_subscription(Float32MultiArray, "/auv/mission_manager/desired_target_pos", self.__callback_on_pts_selected, 10) # TODO dégager le /tmp 
         else:
-            self.camera_pts_select = self.create_subscription(PoseArray, "/IBVS/image/selected/meter", self.__callback_on_pts_selected, qos_profile) # TODO dégager le /tmp 
+            self.camera_pts_select = self.create_subscription(PoseArray, "/IBVS/image/selected/raw", self.__callback_on_pts_selected, qos_profile) # TODO dégager le /tmp 
         if self.param_attach_fab :
             self.camera_pts_detec = self.create_subscription(Float32MultiArray, "/auv/image_computer/target_pos_m", self.__callback_on_pts_detected, 10)
         else:
@@ -79,7 +80,7 @@ class CameraController(bc.BaseRos2):
 
         tmp = uVal.handle_z_value(tmp, self.param_zValue_isSet, self.param_zValue_default)
         self.pts_selected_raw = tmp
-        tmp = uVal.list_points_to_meters(tmp)
+        tmp = uImg.list_points_to_meters(tmp)
         self.pts_selected = tmp
         
 
@@ -91,7 +92,7 @@ class CameraController(bc.BaseRos2):
             tmp = uMessage.poseArray_to_points(data)
             tmp = uVal.handle_z_value(tmp, self.param_zValue_isSet, self.param_zValue_default)
             self.pts_detected_raw = tmp
-            tmp = uVal.list_points_to_meters(tmp)
+            tmp = uImg.list_points_to_meters(tmp)
         
         self.pts_detected = tmp
 

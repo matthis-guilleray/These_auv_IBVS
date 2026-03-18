@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import IBVS_ROV.Utils.Image.utilsImage as utilsImage
 
 
 def roi_increase(top_left, bot_right, factor_width, factor_height):

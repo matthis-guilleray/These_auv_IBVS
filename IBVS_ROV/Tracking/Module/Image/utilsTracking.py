@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
-import IBVS_ROV.Utils.Image.utilsImage as utilsImage
+import IBVS_ROV.Tracking.Module.Image.utilsCv2 as uCV2
+import IBVS_ROV.Tracking.Module.Image.utilsImage as uImg
 import math
 
 # TODO set as parametres
@@ -48,8 +49,8 @@ def manually_select_keypoints(img):
     cv2.setMouseCallback(name_window,callback_opencv_imshow)
     while(1):
         img_draw = img.copy()
-        utilsImage.draw_points(img_draw, list_points)
-        k = utilsImage.show_image(img_draw, 10, name_window) & 0xFF
+        uCV2.draw_points(img_draw, list_points)
+        k = uCV2.show_image(img_draw, 10, name_window) & 0xFF
 
         if k == 27 :
             break
@@ -152,8 +153,8 @@ def estimate_target_depth(points):
     retval, _, tvecs = cv2.solvePnP(
         objectPoints=object_points,
         imagePoints=image_points,
-        cameraMatrix=np.reshape(np.array(utilsImage.cam_info_k,dtype=np.float32), (3,3)),
-        distCoeffs=np.array(utilsImage.cam_info_d, dtype=np.float32),
+        cameraMatrix=np.reshape(np.array(uImg.cam_info_k,dtype=np.float32), (3,3)),
+        distCoeffs=np.array(uImg.cam_info_d, dtype=np.float32),
         flags=cv2.SOLVEPNP_IPPE
     )
     if retval:
