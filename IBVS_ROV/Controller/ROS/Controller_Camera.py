@@ -43,7 +43,7 @@ class CameraController(bc.BaseRos2):
         if self.param_attach_fab == True:
             self.camera_pts_select = self.create_subscription(Float32MultiArray, "/auv/mission_manager/desired_target_pos", self.__callback_on_pts_selected, 10) # TODO dégager le /tmp 
         else:
-            self.camera_pts_select = self.create_subscription(PoseArray, "/IBVS/image/selected/meter", self.__callback_on_pts_selected, qos_profile) # TODO dégager le /tmp 
+            self.camera_pts_select = self.create_subscription(PoseArray, "/IBVS/image/selected/raw", self.__callback_on_pts_selected, qos_profile) # TODO dégager le /tmp 
         if self.param_attach_fab :
             self.camera_pts_detec = self.create_subscription(Float32MultiArray, "/auv/image_computer/target_pos_m", self.__callback_on_pts_detected, 10)
         else:
