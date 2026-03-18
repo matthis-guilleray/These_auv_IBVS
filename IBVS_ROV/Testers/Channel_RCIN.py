@@ -60,7 +60,7 @@ class RcInTester(br.BlueRov):
 
 def main(argv=None):
     rclpy.init(args=argv)
-    obj = RcInTester(rclpy=rclpy, frequency_main=30, name="BlueRov")
+    obj = RcInTester(node_rclpy=rclpy, frequency=30, name="rcintester")
     obj.node_run()
     rclpy.shutdown()
     rclpy

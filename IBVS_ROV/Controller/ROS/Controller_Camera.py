@@ -18,8 +18,11 @@ class CameraController(bc.BaseRos2):
     pts_selected:list[list[float]] = None
     pts_detected:list[list[float]] = None
 
-    def __init__(self, rclpy=rclpy, frequency=30, name="Camera Controller"):
-        super().__init__(rclpy=rclpy, name=name, frequency=frequency)
+    def __init__(self, node_rclpy=rclpy, frequency=30, name="controllercamera"):
+        super().__init__(frequency=frequency, 
+                         node_rclpy=node_rclpy,
+                         name_app=name
+                         )
 
     def run_parameters(self):
         super().run_parameters()
@@ -65,6 +68,7 @@ class CameraController(bc.BaseRos2):
             pts_selected = self.pts_selected
 
             matrix_ctrl, vector_error = uCont.compute_command_camera(pts_selected, pts_detected, self.param_lambda)
+            # self.set_state("update/pub")
             self.__publish_error(vector_error)
             self.__publish_control(matrix_ctrl)
             self.__publish_debug(pts_detected)
@@ -117,7 +121,7 @@ class CameraController(bc.BaseRos2):
 
 def main(argv=None):
     rclpy.init(args=argv)
-    blueRov = CameraController(frequency=60, name="Camera_Controller", rclpy=rclpy)
+    blueRov = CameraController(frequency=30, node_rclpy=rclpy)
     blueRov.node_run()
 
 if __name__ == '__main__':

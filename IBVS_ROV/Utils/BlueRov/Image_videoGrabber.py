@@ -25,7 +25,10 @@ class VideoGrabber(bc.BaseRos2):
     """
 
     def __init__(self):
-        super().__init__(name="video", frequency=30, rclpy=rclpy)
+        super().__init__(frequency=30, 
+                         node_rclpy=rclpy,
+                         name_app="videograbber"
+                         )
         self.log("info", "Starting VideoGrabber")
 
 
@@ -144,7 +147,8 @@ class VideoGrabber(bc.BaseRos2):
 
     def run_publishers(self):
         # Create a publisher for the image
-        self.publisher_image = self.create_publisher(Image, '/IBVS/sensor/camera', 10) 
+        super().run_publishers()
+        self.publisher_image = self.create_publisher(Image, 'sensor/camera', 10, namespace_override=True) 
 
     def run_parameters(self):
         super().run_parameters()
