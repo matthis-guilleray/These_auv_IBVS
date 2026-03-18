@@ -1,5 +1,4 @@
 # import interface as iface
-import IBVS_ROV.Tracking.Module.Image.utilsImage as uImage
 import IBVS_ROV.Tracking.Module.Image.utilsCv2 as uCV2
 import IBVS_ROV.Tracking.Module.Image.utilsRoi as uRoi
 import IBVS_ROV.Tracking.Module.Image.utilsTracking as uTracking
@@ -40,7 +39,7 @@ class VisualTracking:
 
         # Generation ROI
         roi, mask_colored = uRoi.roi_generate(mask_colored, self.pts_old_selected, True, factor=roi_factor)
-        mask_colored = uImage.draw_points(mask_colored, self.pts_hand_selected, [255,0,0])
+        mask_colored = uCV2.draw_points(mask_colored, self.pts_hand_selected, [255,0,0])
         if (roi != None):
             pts_new_selected = uRoi.roi_select_points(roi, pts_new)
             _, board_points = uTracking.order_points(pts_new_selected)

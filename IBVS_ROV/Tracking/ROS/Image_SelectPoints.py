@@ -44,7 +44,7 @@ class PointsSelection(bc.BaseRos2):
             self.log("info", "Selecting points on an image")
             self.tracker.is_selecting = True
             try:
-                self.tracker.on_image(image)
+                self.tracker.select_points(image)
             except ValueError as e:
                 self.log("error", f"Not enough points : {str(e)}")
             
@@ -59,12 +59,8 @@ class PointsSelection(bc.BaseRos2):
         self.log("debug", f"Topic : {topic}, data : {msg}")
 
 
-        if "Tracking/pointsSelected/raw" in topic:
+        if "points/raw" in topic:
             self.publisher_pts_selected_raw.publish(msg)
-        if "Tracking/pointsSelected/center" in topic:
-            self.publisher_pts_selected_center.publish(msg)
-        if "Tracking/pointsSelected/meter" in topic:
-            self.publisher_pts_selected_meter.publish(msg)
 
 
     
