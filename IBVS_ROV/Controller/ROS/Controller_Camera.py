@@ -42,16 +42,16 @@ class CameraController(bc.BaseRos2):
             depth=1
         )
         self.log("info", "Creating Subscribers")
-        self.camera_pts_select = self.create_subscription(PoseArray, "/IBVS/image/selected/raw", self.__callback_on_pts_selected, qos_profile)
-        self.camera_pts_detec = self.create_subscription(PoseArray, "/IBVS/image/detected/raw", self.__callback_on_pts_detected, qos_profile)
+        self.camera_pts_select = self.create_subscription(PoseArray, "/IBVS/image/selected/raw", self.__callback_on_pts_selected, qos_profile=self.qos_profile)
+        self.camera_pts_detec = self.create_subscription(PoseArray, "/IBVS/image/detected/raw", self.__callback_on_pts_detected, qos_profile=self.qos_profile)
         
 
     def run_publishers(self):
         super().run_publishers()
         self.log("info", "Creating publishers")
-        self.publisher_vel_camera = self.create_publisher(Twist, "/IBVS/controller/command/camera", 10)
-        self.publisher_error_camera = self.create_publisher(PoseArray, "/IBVS/controller/error/meter", 10)
-        self.publisher_debug = self.create_publisher(PoseArray, "/IBVS/controller/debug2", 10)
+        self.publisher_vel_camera = self.create_publisher(Twist, "/IBVS/controller/command/camera", qos_profile=self.qos_profile)
+        self.publisher_error_camera = self.create_publisher(PoseArray, "/IBVS/controller/error/meter", qos_profile=self.qos_profile)
+        self.publisher_debug = self.create_publisher(PoseArray, "/IBVS/controller/debug2", qos_profile=self.qos_profile)
 
 
 

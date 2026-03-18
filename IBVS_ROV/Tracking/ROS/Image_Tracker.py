@@ -39,11 +39,8 @@ class ImageTracker(bc.BaseRos2):
     
     def run_publishers(self):
         super().run_publishers()
-        qos_profile = QoSProfile(
-            reliability=QoSReliabilityPolicy.BEST_EFFORT,
-            history=QoSHistoryPolicy.KEEP_LAST,
-            depth=1
-        )
+        qos_profile = self.qos_profile
+
         self.publisher_pts_tracked_raw = self.create_publisher(PoseArray, 'image/detected/raw', qos_profile, namespace_override=True) 
         self.publisher_mask = self.create_publisher(Image, "image/debug/mask/raw", qos_profile, namespace_override=True)
         self.publisher_mask_colored = self.create_publisher(Image, "image/debug/mask/colored", qos_profile, namespace_override=True)
@@ -51,11 +48,7 @@ class ImageTracker(bc.BaseRos2):
 
 
     def run_subscribers(self):
-        qos_profile = QoSProfile(
-            reliability=QoSReliabilityPolicy.BEST_EFFORT,
-            history=QoSHistoryPolicy.KEEP_LAST,
-            depth=1
-        )
+        qos_profile = self.qos_profile
         super().run_subscribers()
         self.subscriber_image = self.create_subscription(Image, "sensor/camera", self.__callback_on_frame, qos_profile, namespace_override=True)
         self.subscriber_selected_points = self.create_subscription(PoseArray, "image/selected/raw", self.__callback_on_selected_points, qos_profile, namespace_override=True)

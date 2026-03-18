@@ -29,12 +29,12 @@ class ControllerFrame(bc.BaseRos2):
     def run_subscribers(self):
         super().run_subscribers()
         
-        self.subscriber_command_camera = self.create_subscription(Twist, "controller/command/camera", self._callback_command_camera, 10, namespace_override=True)
+        self.subscriber_command_camera = self.create_subscription(Twist, "controller/command/camera", self._callback_command_camera, self.qos_profile, namespace_override=True)
         
 
     def run_publishers(self):
         super().run_publishers()
-        self.publisher_command_robot = self.create_publisher(Twist, "controller/command/robot", 10, namespace_override=True)
+        self.publisher_command_robot = self.create_publisher(Twist, "controller/command/robot", self.qos_profile, namespace_override=True)
 
     def update(self):
         if self.command_camera is not None:
