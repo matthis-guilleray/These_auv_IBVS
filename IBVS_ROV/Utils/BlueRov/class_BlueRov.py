@@ -46,10 +46,18 @@ class BlueRov(bc.BaseRos2):
 
 
 
-    def __init__(self, rclpy, frequency_main, name):
-        super(BlueRov, self).__init__(rclpy=rclpy, frequency=frequency_main, name=name, namespace="/bluerov2")
+    def __init__(self, rclpy, 
+                 frequency=30, 
+                 name_app="bluerov",
+                 name_space_bluerov="bluerov2"
+                 ):
+        self.name_space_bluerov = name_space_bluerov
+        super(BlueRov, self).__init__(rclpy=rclpy, 
+                                      name_app=name_app,
+                                      frequency=frequency)
+        self.set_state("Starting")
         if (self.param_ignore_arm == False):
-            self.client_arming = uClient.blueRov_create_client(self)
+            self.client_arming = uClient.create_client(self, uArm.CommandLong, "/cmd/command", namespace_override=self.name_space_bluerov)
             uArm.set_disarm(self, self.client_arming)
             uArm.set_stream_rate(self, 25)
 
@@ -58,6 +66,7 @@ class BlueRov(bc.BaseRos2):
         """
         Super function called on node startup
         """
+        self.set_state("Runnig")
         pass
 
     
@@ -65,6 +74,7 @@ class BlueRov(bc.BaseRos2):
         """
         Super function called on node stop
         """
+        self.set_state("Exiting")
         if self.param_ignore_arm == False:
             uArm.set_disarm(self, self.client_arming)
         self.log("info", "Ending RosPin")
@@ -74,6 +84,7 @@ class BlueRov(bc.BaseRos2):
         """
         Super function called on a timer of frequency_main
         """
+        self.set_state("Updating")
         if self.param_stop == True:
             uSpeed.set_speed_neutral(self)
             self.mode_requested["robot_disarm"] = True
@@ -102,6 +113,8 @@ class BlueRov(bc.BaseRos2):
             uSpeed.set_speed(self, self.cmd_autom)
         if self.cmd_manual is not None and self.joystick_is_mode_manual():
             uSpeed.set_speed(self, self.cmd_manual)
+        
+        self.set_state("Waiting")
 
         
 
@@ -113,23 +126,24 @@ class BlueRov(bc.BaseRos2):
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=1
         )
-        self.log("info", "joy : " + self.namespace+"/joy")
-        self.subscriber_joystick = self.create_subscription(Joy, self.namespace+"/joy", self._callback_set_cmd_bp, qos_profile=qos_profile)
-        self.subscriber_cmdvel = self.create_subscription(Twist, self.namespace+"/cmd_vel", self._callback_cmd_manual_vel, qos_profile=qos_profile)
-        self.subscriber_imu = self.create_subscription(Imu, self.namespace+"/imu/data", self._callback_imu, qos_profile=qos_profile)
-        self.subscriber_battery = self.create_subscription(BatteryState, self.namespace+"/battery", self._callback_battery, 
+        self.log("info", "joy : " + "joy")
+        self.subscriber_joystick = self.create_subscription(Joy, "joy", self._callback_set_cmd_bp, qos_profile=qos_profile, namespace_override=self.name_space_bluerov)
+        self.subscriber_cmdvel = self.create_subscription(Twist, "cmd_vel", self._callback_cmd_manual_vel, qos_profile=qos_profile, namespace_override=self.name_space_bluerov)
+        self.subscriber_imu = self.create_subscription(Imu, "imu/data", self._callback_imu, qos_profile=qos_profile, namespace_override=self.name_space_bluerov)
+        self.subscriber_battery = self.create_subscription(BatteryState, "battery", self._callback_battery, 
                                                            qos_profile=QoSProfile(reliability=QoSReliabilityPolicy.BEST_EFFORT, 
                                                                                   history=QoSHistoryPolicy.KEEP_LAST, 
-                                                                                  depth=1))
-        self.create_subscription(Twist, "/"+"IBVS"+"/controller/command/robot", self._callback_cmd_automatic_vel, qos_profile)# TODO Change IBVS to var name
+                                                                                  depth=1), namespace_override=self.name_space_bluerov)
+        self.create_subscription(Twist, "controller/command/robot", self._callback_cmd_automatic_vel, qos_profile, namespace_override=True)
 
 
     def run_publishers(self):
-        self.publisher_override_rc_in = self.create_publisher(OverrideRCIn, self.namespace+"/rc/override", QOS_PROFILE)
-        self.publisher_angle_degrees = self.create_publisher(Twist, self.namespace+'/angle_degree', QOS_PROFILE)
-        self.publisher_depth = self.create_publisher(Float64, self.namespace+'/depth', QOS_PROFILE)
-        self.publisher_angular_velocity = self.create_publisher(Twist, self.namespace+'/angular_velocity', QOS_PROFILE)
-        self.publisher_linear_velocity = self.create_publisher(Twist, self.namespace+'/linear_velocity', QOS_PROFILE)
+        super().run_publishers()
+        self.publisher_override_rc_in = self.create_publisher(OverrideRCIn, "override", QOS_PROFILE, namespace_override=self.name_space_bluerov)
+        self.publisher_angle_degrees = self.create_publisher(Twist, "angle_degree", QOS_PROFILE, namespace_override=self.name_space_bluerov)
+        self.publisher_depth = self.create_publisher(Float64, "depth", QOS_PROFILE, namespace_override=self.name_space_bluerov)
+        self.publisher_angular_velocity = self.create_publisher(Twist, "angular_velocity", QOS_PROFILE, namespace_override=self.name_space_bluerov)
+        self.publisher_linear_velocity = self.create_publisher(Twist, "linear_velocity", QOS_PROFILE, namespace_override=self.name_space_bluerov)
 
 
     def run_parameters(self):
@@ -207,7 +221,7 @@ class BlueRov(bc.BaseRos2):
 
 def main(argv=None):
     rclpy.init(args=argv)
-    blueRov = BlueRov(frequency_main=30, name="BlueRov", rclpy=rclpy)
+    blueRov = BlueRov(rclpy=rclpy, frequency=30, name_space="IBVS", name_app="bluerov", name_space_bluerov="bluerov2")
     blueRov.node_run()
 
 if __name__ == '__main__':

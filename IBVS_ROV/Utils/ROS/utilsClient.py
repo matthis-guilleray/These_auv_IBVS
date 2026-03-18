@@ -1,7 +1,10 @@
 import rclpy
 
-def create_client(node, message_type, topic):
-    topic = node.namespace + topic
+def create_client(node, message_type, topic, namespace_override=None):
+    if namespace_override : 
+        topic = "/" + namespace_override + topic
+    else:
+        topic = "/"+node.name_space + topic
     node.log("info", f"Creating client : {topic}")
     node.log("info", f"Message : {message_type}")
     cli = node.create_client(message_type, topic)

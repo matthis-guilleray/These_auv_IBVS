@@ -19,8 +19,11 @@ class ImageTracker(bc.BaseRos2):
     cv_bridge = CvBridge()
     vt:mD.VisualTracking
 
-    def __init__(self, rclpy=rclpy, name="Image Tracking class", frequency=30):
-        super().__init__(rclpy=rclpy, name=name, frequency=frequency)
+    def __init__(self, rclpnode_rclpyy=rclpy, name="tracker", frequency=30):
+        super().__init__(frequency=frequency, 
+                         node_rclpy=rclpy,
+                         name_app=name
+                         )
         self.vt = mD.VisualTracking(self)
         
 
@@ -41,9 +44,9 @@ class ImageTracker(bc.BaseRos2):
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=1
         )
-        self.publisher_pts_tracked_raw = self.create_publisher(PoseArray, '/IBVS/image/detected/raw', qos_profile) 
-        self.publisher_mask = self.create_publisher(Image, "/IBVS/image/debug/mask/raw", qos_profile)
-        self.publisher_mask_colored = self.create_publisher(Image, "/IBVS/image/debug/mask/colored", qos_profile)
+        self.publisher_pts_tracked_raw = self.create_publisher(PoseArray, 'image/detected/raw', qos_profile, namespace_override=True) 
+        self.publisher_mask = self.create_publisher(Image, "image/debug/mask/raw", qos_profile, namespace_override=True)
+        self.publisher_mask_colored = self.create_publisher(Image, "image/debug/mask/colored", qos_profile, namespace_override=True)
 
 
 
@@ -54,8 +57,8 @@ class ImageTracker(bc.BaseRos2):
             depth=1
         )
         super().run_subscribers()
-        self.subscriber_image = self.create_subscription(Image, "/IBVS/sensor/camera", self.__callback_on_frame, qos_profile)
-        self.subscriber_selected_points = self.create_subscription(PoseArray, "/IBVS/image/selected/raw", self.__callback_on_selected_points, qos_profile)
+        self.subscriber_image = self.create_subscription(Image, "sensor/camera", self.__callback_on_frame, qos_profile, namespace_override=True)
+        self.subscriber_selected_points = self.create_subscription(PoseArray, "image/selected/raw", self.__callback_on_selected_points, qos_profile, namespace_override=True)
 
 
     def _handle_image(self, image):
@@ -102,7 +105,7 @@ class ImageTracker(bc.BaseRos2):
 
 def main(argv=None):
     rclpy.init(args=argv)
-    blueRov = ImageTracker(frequency=60, name="Tracker", rclpy=rclpy)
+    blueRov = ImageTracker(frequency=30, name="Tracker", node_rclpy=rclpy)
     blueRov.node_run()
 
 if __name__ == '__main__':

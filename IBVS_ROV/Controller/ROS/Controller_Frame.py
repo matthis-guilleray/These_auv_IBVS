@@ -10,8 +10,11 @@ class ControllerFrame(bc.BaseRos2):
 
     command_camera:list[float] = None
 
-    def __init__(self, rclpy=rclpy, frequency=30, name="Frame_Controller"):
-        super().__init__(rclpy=rclpy, name=name, frequency=frequency)
+    def __init__(self, node_rclpy=rclpy, frequency=30, name="controllerframe"):
+        super().__init__(frequency=frequency, 
+                         node_rclpy=node_rclpy,
+                         name_app=name
+                         )
 
     def run_parameters(self):
         super().run_parameters()
@@ -26,12 +29,12 @@ class ControllerFrame(bc.BaseRos2):
     def run_subscribers(self):
         super().run_subscribers()
         
-        self.subscriber_command_camera = self.create_subscription(Twist, "/IBVS/controller/command/camera", self._callback_command_camera, 10)
+        self.subscriber_command_camera = self.create_subscription(Twist, "controller/command/camera", self._callback_command_camera, 10, namespace_override=True)
         
 
     def run_publishers(self):
         super().run_publishers()
-        self.publisher_command_robot = self.create_publisher(Twist, "/IBVS/controller/command/robot", 10)
+        self.publisher_command_robot = self.create_publisher(Twist, "controller/command/robot", 10, namespace_override=True)
 
     def update(self):
         if self.command_camera is not None:
@@ -50,7 +53,7 @@ class ControllerFrame(bc.BaseRos2):
 
 def main(argv=None):
     rclpy.init(args=argv)
-    blueRov = ControllerFrame(frequency=60)
+    blueRov = ControllerFrame(frequency=30)
     blueRov.node_run()
 
 if __name__ == '__main__':

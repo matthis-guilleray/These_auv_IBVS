@@ -51,7 +51,7 @@ def set_disarm(node, client):
 
 def set_stream_rate(node, rate):
     node.log('info', f"Setting stream rate : {rate}")
-    client = uClient.create_client(node, topic="/set_stream_rate", message_type=StreamRate)
+    client = uClient.create_client(node, topic="/set_stream_rate", message_type=StreamRate, namespace_override=node.name_space_bluerov)
 
     req = StreamRate.Request()
     req.stream_id = 0

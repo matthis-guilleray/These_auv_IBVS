@@ -15,23 +15,28 @@ class PointsSelection(bc.BaseRos2):
     tracker:mS.VisualTracking
     cv_bridge = CvBridge()
 
-    def __init__(self, rclpy, name="BaseRos2", frequency=30):
-        super().__init__(rclpy, name, frequency)
+    def __init__(self, node_rclpy, name="selecter", frequency=30):
+        super().__init__(frequency=frequency, 
+                         node_rclpy=node_rclpy,
+                         name_app=name
+                         )
         self.log("info", "Init Points Selection object")
         self.tracker = mS.VisualTracking(self)
 
 
     def run_subscribers(self):
+        super().run_subscribers()
         qos_profile = QoSProfile(
             reliability=QoSReliabilityPolicy.BEST_EFFORT,
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=1
         )
-        self.subscriber_image = self.create_subscription(Image, "/IBVS/sensor/camera", self._callback_on_frame, qos_profile)
+        self.subscriber_image = self.create_subscription(Image, "sensor/camera", self._callback_on_frame, qos_profile, namespace_override=True)
 
 
     def run_publishers(self):
-        self.publisher_pts_selected_raw = self.create_publisher(PoseArray, '/IBVS/image/selected/raw', 10) 
+        super().run_publishers()
+        self.publisher_pts_selected_raw = self.create_publisher(PoseArray, 'image/selected/raw', 10, namespace_override=True) 
 
     def run_parameters(self):
         super().run_parameters()
@@ -66,7 +71,7 @@ class PointsSelection(bc.BaseRos2):
     
 def main(argv=None):
     rclpy.init(args=argv)
-    blueRov = PointsSelection(frequency=30, name="BlueRov", rclpy=rclpy)
+    blueRov = PointsSelection(frequency=30, name="BlueRov", node_rclpy=rclpy)
     blueRov.node_run()
 
 if __name__ == '__main__':

@@ -5,6 +5,8 @@ from std_msgs.msg import Header
 from datetime import datetime
 import traceback
 import rclpy.logging
+from rclpy.publisher import Publisher
+import time
 
 
 
@@ -12,30 +14,37 @@ class BaseRos2(Node):
     dT:float
     name:str
     timer_update:rclpy.timer.Timer
-    rclpy:rclpy
+    local_rclpy:rclpy
+    name_space:str = None
+    name_app:str = None
+
+    loop_time_start:float
     
 
-    def __init__(self, rclpy, name_app, name_space, frequency=30):
+    def __init__(self, node_rclpy:rclpy, name_app, name_space="IBVS", frequency=30):
         super().__init__(name_app)
         self.dT = 1/frequency
         self._log = self.get_logger()
-        self.rclpy = rclpy
+        self.local_rclpy = node_rclpy
         self.name_space = name_space
         self.name_app = name_app
 
         self.run_parameters()
         self.run_subscribers()
         self.run_publishers()
-        
-        self.timer_update = self.create_timer(self.dT, self.update)
-        if self.name_app == "" or self.name_class == "":
-            raise ValueError("name app and name class, cannot be set to nothing")
+        self.set_state("starting")
         
 
     def __enter__(self):
         self.log("info", "------ Method : Enter")
         obj = self.enter()
         self.log("info", "------ Starting ROS")
+        self.set_state("started")
+        if self.param_loop_mode:
+            self.loop_time_start = 0            
+        else:
+            self.timer_update = self.create_timer(self.dT, self._update)
+        
         return obj
 
     def __exit__(self, exc_type=None, exc=None, tb=None):
@@ -44,7 +53,7 @@ class BaseRos2(Node):
         self.exit()
         # ROS call : 
         self.destroy_node()
-        self.rclpy.shutdown()
+        self.local_rclpy.shutdown()
 
     def __getattr__(self, name):
         # Function which get called when attribute not found
@@ -53,16 +62,41 @@ class BaseRos2(Node):
             return value
         except Exception as e:
             raise KeyError(f"Element not found : {name} either in object or in parameters {str(e)}")
+        
+    def create_publisher(self, msg_type, topic, qos_profile, *, 
+                            namespace_override = False,
+                            callback_group = None,
+                            event_callbacks = None,
+                            qos_overriding_options = None,
+                            publisher_class = Publisher):
+        if type(namespace_override) == str:
+            # Case where namespace override is str
+            topic = f"/{namespace_override}/{topic}"
+            
+        if namespace_override == True and self.name_space is not None:
+            topic = f"/{self.name_space}/{topic}"
+        return super().create_publisher(msg_type, topic, qos_profile, callback_group=callback_group, event_callbacks=event_callbacks, qos_overriding_options=qos_overriding_options, publisher_class=publisher_class)
+    
+    def create_subscription(self, msg_type, topic, callback, qos_profile, *, namespace_override = False, callback_group = None, event_callbacks = None, qos_overriding_options = None, raw = False):
+        if type(namespace_override) == str:
+            # Case where namespace override is str
+            topic = f"/{namespace_override}/{topic}"
+            
+        if namespace_override == True and self.name_space is not None:
+            topic = f"/{self.name_space}/{topic}"
+
+        return super().create_subscription(msg_type, topic, callback, qos_profile, callback_group=callback_group, event_callbacks=event_callbacks, qos_overriding_options=qos_overriding_options, raw=raw)
 
     def run_subscribers(self):
         pass
 
     def run_publishers(self):
-        self.pub_state = self.create_publisher(Header, f"/{self.name_space}/{self.name_app}/state", qos_profile=10)
+        self.pub_state = self.create_publisher(Header, f"state/{self.name_app}", 10, namespace_override=True)
 
     def run_parameters(self):
         self.declare_parameter('param_debug', True)
         self.declare_parameter("param_log_min_level", rclpy.logging.LoggingSeverity.DEBUG)
+        self.declare_parameter("param_loop_mode", False)
 
     def log(self, log_level, data, once = False, skip_first = False):
         once = False
@@ -86,6 +120,22 @@ class BaseRos2(Node):
             case _: 
                 raise ValueError(f"Log level not found {log_level}")
 
+
+    def _loop(self):
+        tmp_time = time.time()
+        if tmp_time-self.loop_time_start >= self.dT:
+            self._update()
+            self.loop_time_start = tmp_time
+        self.local_rclpy.spin_once(self, timeout_sec=1/9000)
+
+
+
+    def _update(self):
+        self.set_state("Updating")
+        self.update()
+        self.set_state("Waiting")
+
+
     def update(self):
         pass
 
@@ -99,13 +149,20 @@ class BaseRos2(Node):
         # rclpy.init(args=args)
         self.__enter__()
         # context.on_shutdown(self.__exit__)
-        try:
-            self.rclpy.spin(self)
-            self.__exit__()
-        except Exception as e:
-            self.get_logger().error(f"Error: {e}")
-            self.get_logger().error(traceback.format_exc())
-            self.__exit__()
+
+        if self.param_loop_mode:
+            while(self.local_rclpy.ok()):
+                self._loop()
+
+        else:
+
+            try:
+                self.local_rclpy.spin(self)
+                self.__exit__()
+            except Exception as e:
+                self.get_logger().error(f"Error: {e}")
+                self.get_logger().error(traceback.format_exc())
+                self.__exit__()
 
     def set_state(self, state:str):
         msg = Header()
